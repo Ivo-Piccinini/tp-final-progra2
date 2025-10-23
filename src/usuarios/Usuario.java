@@ -61,7 +61,7 @@ public abstract class Usuario implements Comparable<Usuario> {
         this.email = email;
         this.rol = rol;
         this.estado = estado;
-        if(validaDNI(dni)){
+        if(!validaDNI(dni)){
             throw new IllegalArgumentException("Error: El DNI debe contener exactamente 8 dígitos numéricos.");
         }
         this.dni = dni;
