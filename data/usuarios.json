@@ -1,12 +1,12 @@
 {
-    "totalUsuarios": 2,
-    "fechaActualizacion": "2025-10-24T18:06:46.072393400",
+    "totalUsuarios": 3,
+    "fechaActualizacion": "2025-10-24T18:27:23.836224400",
     "usuarios": [
         {
             "metaVentas": 0,
             "estado": 1,
             "ventasRealizadas": [],
-            "fechaRegistro": "2025-10-24T18:06:26.088510600",
+            "fechaRegistro": "2025-10-24T18:20:30.099672600",
             "salario": 1000000,
             "nombre": "vendedor",
             "rol": "VENDEDOR",
@@ -22,7 +22,26 @@
         },
         {
             "estado": 1,
-            "fechaRegistro": "2025-10-24T18:06:26.090511500",
+            "fechaRegistro": "2025-10-24T18:22:04.336788500",
+            "direccion": "Utn Puerto",
+            "historialCompras": ["2025-10-24T18:27:23.835214800 - Logitech MX Master 3 x1 = $25000,00"],
+            "saldo": 25000,
+            "nombre": "Facundo",
+            "rol": "CLIENTE",
+            "metodoPago": "TARJETA_CREDITO",
+            "preferencias": [],
+            "password": "facupro",
+            "cantProductosComprados": 1,
+            "apellido": "Barreto",
+            "tipoUsuario": "CLIENTE",
+            "id": 2,
+            "telefono": "2235839021",
+            "email": "facubarreto2006@gmail.com",
+            "dni": "47413108"
+        },
+        {
+            "estado": 1,
+            "fechaRegistro": "2025-10-24T18:20:30.100673800",
             "direccion": "1234213",
             "historialCompras": [],
             "saldo": 1000000,

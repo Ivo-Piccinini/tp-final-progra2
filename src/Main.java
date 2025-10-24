@@ -9,5 +9,7 @@ public class Main {
         // Crear y ejecutar la interfaz de usuario
         InterfazUsuario interfaz = new InterfazUsuario();
         interfaz.ejecutar();
+
+
     }
 }
