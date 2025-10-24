@@ -136,16 +136,6 @@ public class Vendedor extends Usuario {
             }
         }
     }
-    
-    public void mostrarEstadisticas() {
-        System.out.println("📊 ESTADÍSTICAS DEL VENDEDOR:");
-        System.out.println("  🎯 Meta mensual: " + metaVentasMensual);
-        System.out.println("  ✅ Ventas realizadas: " + cantVentas);
-        System.out.println("  📈 Porcentaje de meta: " + String.format("%.1f", calcularPorcentajeMeta()) + "%");
-        System.out.println("  💰 Total comisiones: $" + String.format("%.2f", totalComisiones));
-        System.out.println("  💵 Salario total: $" + String.format("%.2f", calcularSalarioTotal()));
-        System.out.println("  🏆 Meta cumplida: " + (cumplioMetaMensual() ? "SÍ" : "NO"));
-    }
 
     // ---------------------- MÉTODOS SOBREESCRITOS ----------------------
     @Override

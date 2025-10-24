@@ -3,7 +3,9 @@ package ventas;
 import inventario.Stock;
 import productos.Producto;
 import usuarios.clientes.Cliente;
+import usuarios.clientes.MetodoPago;
 import usuarios.vendedores.Vendedor;
+import descuentos.DescuentoMetodoPago;
 import java.time.LocalDateTime;
 import java.util.*;
 
@@ -22,13 +24,15 @@ public class Venta {
     private double total;
     private LocalDateTime fechaVenta;
     private String estado; // PENDIENTE, COMPLETADA, CANCELADA
+    private MetodoPago metodoPago;
     
     // ---------------------- CONSTRUCTOR ----------------------
-    public Venta(Cliente cliente, Vendedor vendedor) {
+    public Venta(Cliente cliente, Vendedor vendedor, MetodoPago metodoPago) {
         this.id = contador;
         contador++;
         this.cliente = cliente;
         this.vendedor = vendedor;
+        this.metodoPago = metodoPago;
         this.detalles = new ArrayList<>();
         this.subtotal = 0.0;
         this.descuento = 0.0;
@@ -98,14 +102,43 @@ public class Venta {
     
     public boolean procesarVenta(Stock stock) {
         if (detalles.isEmpty()) {
+            System.out.println("❌ No hay productos en la venta.");
             return false; // No hay productos en la venta
         }
         
         // Verificar stock de todos los productos
         for (DetalleVenta detalle : detalles) {
             if (!stock.hayStock(detalle.getProducto().getId(), detalle.getCantidad())) {
+                System.out.println("❌ No hay suficiente stock del producto: " + detalle.getProducto().getNombre());
                 return false; // No hay suficiente stock
             }
+        }
+        
+        // Aplicar descuento por método de pago
+        double descuentoAplicado = DescuentoMetodoPago.calcularDescuento(subtotal, metodoPago);
+        double totalConDescuento = DescuentoMetodoPago.calcularMontoFinal(subtotal, metodoPago);
+        
+        // Actualizar total con descuento
+        this.descuento = descuentoAplicado;
+        this.total = totalConDescuento;
+        
+        // Mostrar resumen de la venta
+        System.out.println("\n🧾 RESUMEN DE VENTA");
+        System.out.println("═══════════════════════════════════");
+        System.out.println("💰 Subtotal: $" + String.format("%.2f", subtotal));
+        if (descuentoAplicado > 0) {
+            System.out.println("🎯 Descuento (" + metodoPago + "): -$" + String.format("%.2f", descuentoAplicado));
+        }
+        System.out.println("💵 Total a pagar: $" + String.format("%.2f", totalConDescuento));
+        System.out.println("💳 Método de pago: " + metodoPago);
+        System.out.println("═══════════════════════════════════");
+        
+        // Verificar saldo del cliente
+        if (cliente.getSaldo() < totalConDescuento) {
+            System.out.println("❌ Saldo insuficiente del cliente.");
+            System.out.println("💰 Saldo actual: $" + String.format("%.2f", cliente.getSaldo()));
+            System.out.println("💵 Total de la venta: $" + String.format("%.2f", totalConDescuento));
+            return false;
         }
         
         // Remover productos del stock
@@ -113,9 +146,19 @@ public class Venta {
             stock.eliminarProducto(detalle.getProducto().getId(), detalle.getCantidad());
         }
         
+        // Descontar dinero del cliente
+        cliente.setSaldo(cliente.getSaldo() - total);
+        
         // Actualizar estadísticas del cliente y vendedor
-        cliente.agregarCompra("Venta #" + id + " - " + detalles.size() + " productos");
+        String descripcionCompra = "Venta #" + id + " - " + detalles.size() + " productos - Total: $" + String.format("%.2f", total);
+        if (descuentoAplicado > 0) {
+            descripcionCompra += " (Descuento: $" + String.format("%.2f", descuentoAplicado) + ")";
+        }
+        cliente.agregarCompra(descripcionCompra);
         vendedor.realizarVenta("Venta #" + id, total);
+        
+        System.out.println("✅ Venta procesada exitosamente.");
+        System.out.println("💰 Saldo restante del cliente: $" + String.format("%.2f", cliente.getSaldo()));
         
         this.estado = "COMPLETADA";
         return true;
@@ -182,6 +225,14 @@ public class Venta {
         return estado;
     }
     
+    public MetodoPago getMetodoPago() {
+        return metodoPago;
+    }
+    
+    public void setMetodoPago(MetodoPago metodoPago) {
+        this.metodoPago = metodoPago;
+    }
+    
     public int getCantidadProductos() {
         return detalles.size();
     }
@@ -200,6 +251,7 @@ public class Venta {
         System.out.println("═══════════════════════════════════");
         System.out.println("👤 Cliente: " + cliente.getNombre() + " " + cliente.getApellido());
         System.out.println("💼 Vendedor: " + vendedor.getNombre() + " " + vendedor.getApellido());
+        System.out.println("💳 Método de pago: " + (metodoPago != null ? metodoPago : "No especificado"));
         System.out.println("📅 Fecha: " + fechaVenta);
         System.out.println("📊 Estado: " + estado);
         System.out.println("═══════════════════════════════════");

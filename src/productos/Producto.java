@@ -45,6 +45,8 @@ public class Producto {
     public int getId() {
         return id;
     }
+
+    public void setId(int id) {}
     
     public static int getContador() {
         return contador;

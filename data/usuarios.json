@@ -1,0 +1,43 @@
+{
+    "totalUsuarios": 2,
+    "fechaActualizacion": "2025-10-24T18:06:46.072393400",
+    "usuarios": [
+        {
+            "metaVentas": 0,
+            "estado": 1,
+            "ventasRealizadas": [],
+            "fechaRegistro": "2025-10-24T18:06:26.088510600",
+            "salario": 1000000,
+            "nombre": "vendedor",
+            "rol": "VENDEDOR",
+            "password": "123456",
+            "apellido": "vende",
+            "comision": 0,
+            "totalVentas": 0,
+            "tipoUsuario": "VENDEDOR",
+            "id": 0,
+            "especializacion": "",
+            "email": "vende@gmail.com",
+            "dni": "12345678"
+        },
+        {
+            "estado": 1,
+            "fechaRegistro": "2025-10-24T18:06:26.090511500",
+            "direccion": "1234213",
+            "historialCompras": [],
+            "saldo": 1000000,
+            "nombre": "Ivo",
+            "rol": "CLIENTE",
+            "metodoPago": "EFECTIVO",
+            "preferencias": [],
+            "password": "123456",
+            "cantProductosComprados": 0,
+            "apellido": "Piccinini",
+            "tipoUsuario": "CLIENTE",
+            "id": 1,
+            "telefono": "2314234",
+            "email": "ivopi@gmail.com",
+            "dni": "12345678"
+        }
+    ]
+}

@@ -147,6 +147,29 @@ public class Stock {
         return ultimaActualizacion;
     }
     
+    // ---------------------- METODOS PARA PERSISTENCIA ----------------------
+    
+    /**
+     * Obtiene el inventario interno (para persistencia)
+     */
+    public Map<Integer, Integer> getInventario() {
+        return new HashMap<>(inventario);
+    }
+    
+    /**
+     * Obtiene los productos internos (para persistencia)
+     */
+    public Map<Integer, Producto> getProductos() {
+        return new HashMap<>(productos);
+    }
+    
+    /**
+     * Actualiza la fecha de última actualización
+     */
+    public void actualizarFecha() {
+        this.ultimaActualizacion = LocalDateTime.now();
+    }
+    
     // ---------------------- METODOS DE REPORTE ----------------------
     public void mostrarInventario() {
         System.out.println("📦 INVENTARIO DE PRODUCTOS");

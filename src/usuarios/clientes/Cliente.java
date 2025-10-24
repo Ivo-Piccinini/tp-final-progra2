@@ -99,6 +99,17 @@ public class Cliente extends Usuario {
         preferencias.remove(preferencia);
     }
     
+    /**
+     * Cambia el método de pago por defecto del cliente
+     */
+    public void cambiarMetodoPagoPorDefecto(MetodoPago nuevoMetodo) {
+        if (nuevoMetodo == null) {
+            throw new IllegalArgumentException("El método de pago no puede ser null.");
+        }
+        this.metodoPago = nuevoMetodo;
+        System.out.println("✅ Método de pago por defecto actualizado a: " + nuevoMetodo);
+    }
+    
     public void mostrarHistorialCompras() {
         System.out.println("🛍️ HISTORIAL DE COMPRAS:");
         if (historialCompras.isEmpty()) {

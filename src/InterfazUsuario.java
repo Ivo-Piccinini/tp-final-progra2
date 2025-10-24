@@ -1,3 +1,4 @@
+import productos.CategoriaProducto;
 import usuarios.clientes.Cliente;
 import usuarios.vendedores.Vendedor;
 
@@ -77,7 +78,8 @@ public class InterfazUsuario {
         System.out.println("3. 🛒 Comprar Productos");
         System.out.println("4. 💰 Agregar Saldo");
         System.out.println("5. 📋 Ver Historial de Compras");
-        System.out.println("6. 🚪 Cerrar Sesión");
+        System.out.println("6. 💳 Cambiar Método de Pago");
+        System.out.println("7. 🚪 Cerrar Sesión");
         System.out.println("═══════════════════════════════════");
     }
     
@@ -87,9 +89,10 @@ public class InterfazUsuario {
         System.out.println("═══════════════════════════════════");
         System.out.println("1. 👤 Ver Mi Información");
         System.out.println("2. 📦 Ver Stock de Productos");
-        System.out.println("3. 💰 Vender Productos");
-        System.out.println("4. 📊 Ver Mis Ventas");
-        System.out.println("5. 🚪 Cerrar Sesión");
+        System.out.println("3. ➕ Agregar Producto al Stock");
+        System.out.println("4. 💰 Vender Productos");
+        System.out.println("5. 📊 Ver Mis Ventas");
+        System.out.println("6. 🚪 Cerrar Sesión");
         System.out.println("═══════════════════════════════════");
     }
     
@@ -147,6 +150,9 @@ public class InterfazUsuario {
                 pausar();
                 break;
             case 6:
+                cambiarMetodoPago();
+                break;
+            case 7:
                 sistema.logout();
                 break;
             default:
@@ -165,13 +171,16 @@ public class InterfazUsuario {
                 pausar();
                 break;
             case 3:
-                venderProductos();
+                agregarProductoAlStock();
                 break;
             case 4:
+                venderProductos();
+                break;
+            case 5:
                 sistema.mostrarVentas();
                 pausar();
                 break;
-            case 5:
+            case 6:
                 sistema.logout();
                 break;
             default:
@@ -572,6 +581,57 @@ public class InterfazUsuario {
     }
     
     /**
+     * Permite al cliente cambiar su método de pago por defecto
+     */
+    private void cambiarMetodoPago() {
+        System.out.println("💳 CAMBIAR MÉTODO DE PAGO");
+        System.out.println("═══════════════════════════════════");
+        
+        usuarios.clientes.Cliente cliente = (usuarios.clientes.Cliente) sistema.getUsuarioActual();
+        System.out.println("Método actual: " + cliente.getMetodoPago());
+        System.out.println("═══════════════════════════════════");
+        System.out.println("1. 📱 Pago QR (5% descuento)");
+        System.out.println("2. 💳 Tarjeta de Débito (3% descuento)");
+        System.out.println("3. 📲 Billetera Virtual (4% descuento)");
+        System.out.println("4. 💳 Tarjeta de Crédito (Sin descuento)");
+        System.out.println("5. 💵 Efectivo (Sin descuento)");
+        System.out.println("0. ❌ Cancelar");
+        System.out.println("═══════════════════════════════════");
+        
+        try {
+            System.out.print("Seleccione una opción: ");
+            int opcion = Integer.parseInt(scanner.nextLine());
+            
+            switch (opcion) {
+                case 1:
+                    cliente.cambiarMetodoPagoPorDefecto(usuarios.clientes.MetodoPago.QR);
+                    break;
+                case 2:
+                    cliente.cambiarMetodoPagoPorDefecto(usuarios.clientes.MetodoPago.DEBITO);
+                    break;
+                case 3:
+                    cliente.cambiarMetodoPagoPorDefecto(usuarios.clientes.MetodoPago.BILLETERA_VIRTUAL);
+                    break;
+                case 4:
+                    cliente.cambiarMetodoPagoPorDefecto(usuarios.clientes.MetodoPago.TARJETA_CREDITO);
+                    break;
+                case 5:
+                    cliente.cambiarMetodoPagoPorDefecto(usuarios.clientes.MetodoPago.EFECTIVO);
+                    break;
+                case 0:
+                    System.out.println("❌ Operación cancelada.");
+                    break;
+                default:
+                    System.out.println("❌ Opción no válida.");
+            }
+        } catch (NumberFormatException e) {
+            System.out.println("❌ Debe ingresar un número válido.");
+        }
+        
+        pausar();
+    }
+    
+    /**
      * Proceso de venta para vendedores
      */
     private void venderProductos() {
@@ -622,6 +682,76 @@ public class InterfazUsuario {
             }
         } catch (NumberFormatException e) {
             System.out.println("❌ Debe ingresar números válidos.");
+        }
+        
+        pausar();
+    }
+    
+    private void agregarProductoAlStock() {
+        System.out.println("➕ AGREGAR PRODUCTO AL STOCK");
+        System.out.println("═══════════════════════════════════");
+        
+        try {
+            // Solicitar datos del producto
+            String nombre = solicitarDato("Nombre del producto", "texto");
+            String descripcion = solicitarDato("Descripción", "texto");
+            
+            // Mostrar categorías disponibles
+            System.out.println("\n📋 CATEGORÍAS DISPONIBLES:");
+            System.out.println("1. LAPTOP");
+            System.out.println("2. SMARTPHONE");
+            System.out.println("3. TABLET");
+            System.out.println("4. AURICULARES");
+            System.out.println("5. SMARTWATCH");
+            System.out.println("6. MOUSE");
+            System.out.println("7. TECLADO");
+            System.out.println("8. MONITOR");
+            
+            int categoriaOpcion = (int) solicitarNumero("Seleccione categoría (1-8): ", "categoria");
+            productos.CategoriaProducto categoria = null;
+            
+            switch (categoriaOpcion) {
+                case 1: categoria = productos.CategoriaProducto.LAPTOP; break;
+                case 2: categoria = productos.CategoriaProducto.SMARTPHONE; break;
+                case 3: categoria = productos.CategoriaProducto.TABLET; break;
+                case 4: categoria = CategoriaProducto.AUDIFONOS; break;
+                case 5: categoria = CategoriaProducto.SOFTWARE; break;
+                case 6: categoria = productos.CategoriaProducto.MOUSE; break;
+                case 7: categoria = productos.CategoriaProducto.TECLADO; break;
+                case 8: categoria = productos.CategoriaProducto.MONITOR; break;
+                default:
+                    System.out.println("❌ Categoría no válida.");
+                    return;
+            }
+            
+            double precio = solicitarNumero("Precio: $", "precio");
+            String marca = solicitarDato("Marca", "texto");
+            String modelo = solicitarDato("Modelo", "texto");
+            String especificaciones = solicitarDato("Especificaciones técnicas", "texto");
+            int cantidad = (int) solicitarNumero("Cantidad a agregar: ", "cantidad");
+            
+            // Validar datos
+            if (precio <= 0) {
+                System.out.println("❌ El precio debe ser mayor a 0.");
+                return;
+            }
+            
+            if (cantidad <= 0) {
+                System.out.println("❌ La cantidad debe ser mayor a 0.");
+                return;
+            }
+            
+            // Agregar producto al stock
+            boolean exito = sistema.agregarProductoAlStock(nombre, descripcion, categoria, precio, marca, modelo, especificaciones, cantidad);
+            
+            if (exito) {
+                System.out.println("\n✅ ¡Producto agregado exitosamente al stock!");
+            } else {
+                System.out.println("\n❌ Error al agregar el producto.");
+            }
+            
+        } catch (Exception e) {
+            System.out.println("❌ Error: " + e.getMessage());
         }
         
         pausar();

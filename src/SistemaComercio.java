@@ -6,6 +6,8 @@ import productos.*;
 import inventario.Stock;
 import ventas.Venta;
 import ventas.DetalleVenta;
+import descuentos.DescuentoMetodoPago;
+import persistencia.StockJSON;
 import java.time.LocalDateTime;
 import java.util.*;
 import java.util.Scanner;
@@ -19,17 +21,23 @@ public class SistemaComercio {
     private Stock stock;
     private List<Venta> ventas;
     private LocalDateTime fechaInicioSistema;
+    private StockJSON stockJSON;
+    private static final String ARCHIVO_STOCK = "data/stock.json";
     
     // ---------------------- CONSTRUCTOR ----------------------
     public SistemaComercio() {
         this.sistemaAutenticacion = new SistemaAutenticacion();
-        this.stock = new Stock();
+        this.stockJSON = new StockJSON();
         this.ventas = new ArrayList<>();
         this.fechaInicioSistema = LocalDateTime.now();
+        
+        // Cargar stock desde archivo JSON
+        cargarStockDesdeArchivo();
         
         System.out.println("🚀 SISTEMA DE COMERCIO DE TECNOLOGÍA INICIADO");
         System.out.println("═══════════════════════════════════════════════");
         System.out.println("📅 Fecha de inicio: " + fechaInicioSistema);
+        System.out.println("📦 Stock cargado desde archivo JSON");
         System.out.println("═══════════════════════════════════════════════\n");
     }
     
@@ -54,6 +62,73 @@ public class SistemaComercio {
         return sistemaAutenticacion.estaLogueado();
     }
 
+    // ---------------------- METODOS DE PERSISTENCIA ----------------------
+    
+    /**
+     * Carga el stock desde el archivo JSON
+     */
+    private void cargarStockDesdeArchivo() {
+        try {
+            System.out.println("🔍 Intentando cargar stock desde: " + ARCHIVO_STOCK);
+            this.stock = stockJSON.cargarStock(ARCHIVO_STOCK);
+            System.out.println("✅ Stock cargado exitosamente desde archivo JSON");
+            System.out.println("📦 Productos en stock: " + stock.getCantidadProductos());
+            System.out.println("📊 Stock total: " + stock.getStockTotal() + " unidades");
+        } catch (Exception e) {
+            System.out.println("⚠️ Error al cargar stock, creando stock vacío: " + e.getMessage());
+            e.printStackTrace(); // Para ver el error completo
+            this.stock = new Stock();
+        }
+    }
+    
+    /**
+     * Guarda el stock actual en el archivo JSON
+     */
+    public boolean guardarStockEnArchivo() {
+        try {
+            stock.actualizarFecha();
+            stockJSON.guardarStock(stock, ARCHIVO_STOCK);
+            return true;
+        } catch (Exception e) {
+            System.out.println("❌ Error al guardar stock: " + e.getMessage());
+            return false;
+        }
+    }
+    
+    /**
+     * Verifica si existe un archivo de stock
+     */
+    public boolean existeArchivoStock() {
+        return stockJSON.existeArchivoStock();
+    }
+    
+    /**
+     * Elimina el archivo de stock
+     */
+    public boolean eliminarArchivoStock() {
+        return stockJSON.eliminarArchivoStock();
+    }
+    
+    /**
+     * Método de debugging para verificar el estado del stock
+     */
+    public void debugStock() {
+        System.out.println("🔍 DEBUG STOCK:");
+        System.out.println("  📦 Total productos: " + stock.getCantidadProductos());
+        System.out.println("  📊 Stock total: " + stock.getStockTotal() + " unidades");
+        System.out.println("  💰 Valor total: $" + String.format("%.2f", stock.getValorTotalInventario()));
+        System.out.println("  🕒 Última actualización: " + stock.getUltimaActualizacion());
+        
+        if (stock.getCantidadProductos() > 0) {
+            System.out.println("  📋 Productos en stock:");
+            for (Map.Entry<Integer, Integer> entry : stock.getInventario().entrySet()) {
+                Producto producto = stock.getProductos().get(entry.getKey());
+                if (producto != null) {
+                    System.out.println("    • ID: " + entry.getKey() + " | " + producto.getNombre() + " | Cantidad: " + entry.getValue());
+                }
+            }
+        }
+    }
     
     // ---------------------- METODOS ----------------------
     
@@ -62,6 +137,12 @@ public class SistemaComercio {
     }
     
     public void mostrarProductosDisponibles() {
+        // Debug: Verificar estado del stock
+        System.out.println("🔍 DEBUG - Estado del stock:");
+        System.out.println("  📦 Total productos: " + stock.getCantidadProductos());
+        System.out.println("  📊 Stock total: " + stock.getStockTotal() + " unidades");
+        System.out.println("  🛍️ Productos disponibles: " + stock.getCantidadProductosDisponibles());
+        
         stock.mostrarProductosDisponibles();
     }
     
@@ -100,7 +181,34 @@ public class SistemaComercio {
             return false;
         }
         
-        double totalCompra = producto.getPrecio() * cantidad;
+        double subtotal = producto.getPrecio() * cantidad;
+        
+        // Mostrar descuentos disponibles
+        DescuentoMetodoPago.mostrarDescuentosDisponibles();
+        
+        // Seleccionar método de pago
+        MetodoPago metodoPagoSeleccionado = seleccionarMetodoPago(cliente);
+        if (metodoPagoSeleccionado == null) {
+            System.out.println("❌ Compra cancelada.");
+            return false;
+        }
+        
+        // Calcular descuento y total final
+        double descuento = DescuentoMetodoPago.calcularDescuento(subtotal, metodoPagoSeleccionado);
+        double totalCompra = DescuentoMetodoPago.calcularMontoFinal(subtotal, metodoPagoSeleccionado);
+        
+        // Mostrar resumen de la compra
+        System.out.println("\n🧾 RESUMEN DE COMPRA");
+        System.out.println("═══════════════════════════════════");
+        System.out.println("📱 Producto: " + producto.getNombre());
+        System.out.println("📦 Cantidad: " + cantidad);
+        System.out.println("💰 Subtotal: $" + String.format("%.2f", subtotal));
+        if (descuento > 0) {
+            System.out.println("🎯 Descuento (" + metodoPagoSeleccionado + "): -$" + String.format("%.2f", descuento));
+        }
+        System.out.println("💵 Total a pagar: $" + String.format("%.2f", totalCompra));
+        System.out.println("💳 Método de pago: " + metodoPagoSeleccionado);
+        System.out.println("═══════════════════════════════════");
         
         if (cliente.getSaldo() < totalCompra) {
             System.out.println("❌ Error: Saldo insuficiente.");
@@ -114,14 +222,24 @@ public class SistemaComercio {
             // Actualizar saldo del cliente
             cliente.setSaldo(cliente.getSaldo() - totalCompra);
             
-            // Registrar la compra
+            // Registrar la compra con descuento
             String descripcionCompra = producto.getNombre() + " x" + cantidad + " = $" + String.format("%.2f", totalCompra);
+            if (descuento > 0) {
+                descripcionCompra += " (Descuento: $" + String.format("%.2f", descuento) + ")";
+            }
             cliente.agregarCompra(descripcionCompra);
+            
+            // Guardar cambios en archivo JSON
+            guardarStockEnArchivo();
+            sistemaAutenticacion.guardarUsuarios();
             
             System.out.println("✅ ¡Compra realizada exitosamente!");
             System.out.println("📱 Producto: " + producto.getNombre());
             System.out.println("📦 Cantidad: " + cantidad);
             System.out.println("💵 Total pagado: $" + String.format("%.2f", totalCompra));
+            if (descuento > 0) {
+                System.out.println("🎯 Descuento aplicado: $" + String.format("%.2f", descuento));
+            }
             System.out.println("💰 Saldo restante: $" + String.format("%.2f", cliente.getSaldo()));
             
             return true;
@@ -154,6 +272,9 @@ public class SistemaComercio {
         Cliente cliente = (Cliente) usuario;
         cliente.setSaldo(cliente.getSaldo() + monto);
         
+        // Guardar cambios en archivo JSON
+        sistemaAutenticacion.guardarUsuarios();
+        
         System.out.println("✅ Saldo agregado exitosamente!");
         System.out.println("💰 Saldo anterior: $" + String.format("%.2f", cliente.getSaldo() - monto));
         System.out.println("💰 Saldo actual: $" + String.format("%.2f", cliente.getSaldo()));
@@ -180,6 +301,60 @@ public class SistemaComercio {
         cliente.mostrarHistorialCompras();
     }
     
+    /**
+     * Permite al cliente seleccionar el método de pago
+     */
+    private MetodoPago seleccionarMetodoPago(Cliente cliente) {
+        Scanner scanner = new Scanner(System.in);
+        
+        System.out.println("\n💳 SELECCIONAR MÉTODO DE PAGO");
+        System.out.println("═══════════════════════════════════");
+        System.out.println("Método por defecto: " + cliente.getMetodoPago());
+        System.out.println("═══════════════════════════════════");
+        System.out.println("1. 📱 Pago QR (5% descuento)");
+        System.out.println("2. 💳 Tarjeta de Débito (3% descuento)");
+        System.out.println("3. 📲 Billetera Virtual (4% descuento)");
+        System.out.println("4. 💳 Tarjeta de Crédito (Sin descuento)");
+        System.out.println("5. 💵 Efectivo (Sin descuento)");
+        System.out.println("6. 🔄 Usar método por defecto");
+        System.out.println("0. ❌ Cancelar compra");
+        System.out.println("═══════════════════════════════════");
+        
+        while (true) {
+            try {
+                System.out.print("Seleccione una opción: ");
+                int opcion = Integer.parseInt(scanner.nextLine());
+                
+                switch (opcion) {
+                    case 1:
+                        cliente.cambiarMetodoPagoPorDefecto(MetodoPago.QR);
+                        return MetodoPago.QR;
+                    case 2:
+                        cliente.cambiarMetodoPagoPorDefecto(MetodoPago.DEBITO);
+                        return MetodoPago.DEBITO;
+                    case 3:
+                        cliente.cambiarMetodoPagoPorDefecto(MetodoPago.BILLETERA_VIRTUAL);
+                        return MetodoPago.BILLETERA_VIRTUAL;
+                    case 4:
+                        cliente.cambiarMetodoPagoPorDefecto(MetodoPago.TARJETA_CREDITO);
+                        return MetodoPago.TARJETA_CREDITO;
+                    case 5:
+                        cliente.cambiarMetodoPagoPorDefecto(MetodoPago.EFECTIVO);
+                        return MetodoPago.EFECTIVO;
+                    case 6:
+                        System.out.println("✅ Usando método por defecto: " + cliente.getMetodoPago());
+                        return cliente.getMetodoPago();
+                    case 0:
+                        return null;
+                    default:
+                        System.out.println("❌ Opción no válida. Intente nuevamente.");
+                }
+            } catch (NumberFormatException e) {
+                System.out.println("❌ Debe ingresar un número válido.");
+            }
+        }
+    }
+    
     // ---------------------- METODOS DE GESTION DE VENTAS ----------------------
     public Venta crearVentaSimple() {
         if (!estaLogueado()) {
@@ -202,9 +377,17 @@ public class SistemaComercio {
         
         Vendedor vendedor = (Vendedor) usuario;
         
-        Venta venta = new Venta(clienteSeleccionado, vendedor);
+        // Seleccionar método de pago
+        MetodoPago metodoPago = seleccionarMetodoPago(clienteSeleccionado);
+        if (metodoPago == null) {
+            System.out.println("❌ Error: No se pudo seleccionar un método de pago.");
+            return null;
+        }
+        
+        Venta venta = new Venta(clienteSeleccionado, vendedor, metodoPago);
         ventas.add(venta);
         System.out.println("✅ Venta creada para cliente: " + clienteSeleccionado.getNombre() + " " + clienteSeleccionado.getApellido());
+        System.out.println("💳 Método de pago: " + metodoPago);
         return venta;
     }
     
@@ -302,6 +485,36 @@ public class SistemaComercio {
         return venta.agregarProducto(producto, cantidad, stock);
     }
     
+    /**
+     * Permite a un vendedor agregar un nuevo producto al stock
+     */
+    public boolean agregarProductoAlStock(String nombre, String descripcion, CategoriaProducto categoria, 
+                                        double precio, String marca, String modelo, String especificaciones, int cantidad) {
+        if (!(getUsuarioActual() instanceof Vendedor)) {
+            System.out.println("❌ Solo los vendedores pueden agregar productos al stock.");
+            return false;
+        }
+        
+        try {
+            // Crear el nuevo producto
+            Producto nuevoProducto = new Producto(nombre, descripcion, categoria, precio, marca, modelo, especificaciones);
+            
+            // Agregar al stock
+            stock.agregarProducto(nuevoProducto, cantidad);
+            
+            // Guardar en archivo JSON
+            guardarStockEnArchivo();
+            
+            System.out.println("✅ Producto agregado exitosamente al stock:");
+            System.out.println("📱 " + nombre + " | Cantidad: " + cantidad + " | Precio: $" + String.format("%.2f", precio));
+            
+            return true;
+        } catch (Exception e) {
+            System.out.println("❌ Error al agregar producto: " + e.getMessage());
+            return false;
+        }
+    }
+    
     public boolean procesarVenta(Venta venta) {
         if (venta == null) {
             System.out.println("❌ Error: La venta no puede ser null.");
@@ -310,6 +523,9 @@ public class SistemaComercio {
         
         boolean resultado = venta.procesarVenta(stock);
         if (resultado) {
+            // Guardar cambios en archivo JSON
+            guardarStockEnArchivo();
+            sistemaAutenticacion.guardarUsuarios();
             System.out.println("✅ Venta procesada exitosamente.");
             venta.mostrarDetallesVenta();
         } else {
@@ -335,42 +551,13 @@ public class SistemaComercio {
 
     // ---------------------- MÉTODOS DE INICIALIZACIÓN ----------------------
     public void inicializarSistema() {
-        crearProductosEjemplo();
+        // Solo mostrar información del stock cargado
+        if (stock.getCantidadProductos() > 0) {
+            System.out.println("📦 Stock cargado con " + stock.getCantidadProductos() + " productos");
+        } else {
+            System.out.println("📦 Stock vacío - No hay productos cargados");
+        }
     }
     
-    private void crearProductosEjemplo() {
-        // Crear productos de tecnología de ejemplo
-        Producto laptop1 = new Producto("Dell Inspiron 15", "Laptop para trabajo y estudio", 
-            CategoriaProducto.LAPTOP, 150000.0, "Dell", "Inspiron 15 3000", 
-            "Intel i5, 8GB RAM, 256GB SSD, Windows 11");
-        
-        Producto laptop2 = new Producto("MacBook Air M2", "Laptop ultraportátil de Apple", 
-            CategoriaProducto.LAPTOP, 250000.0, "Apple", "MacBook Air M2", 
-            "Chip M2, 8GB RAM, 256GB SSD, macOS");
-        
-        Producto smartphone1 = new Producto("iPhone 14", "Smartphone premium de Apple", 
-            CategoriaProducto.SMARTPHONE, 180000.0, "Apple", "iPhone 14", 
-            "A15 Bionic, 128GB, iOS 16, Cámara dual 12MP");
-        
-        Producto smartphone2 = new Producto("Samsung Galaxy S23", "Smartphone Android premium", 
-            CategoriaProducto.SMARTPHONE, 200000.0, "Samsung", "Galaxy S23", 
-            "Snapdragon 8 Gen 2, 128GB, Android 13, Cámara 50MP");
-        
-        Producto mouse1 = new Producto("Logitech MX Master 3", "Mouse inalámbrico profesional", 
-            CategoriaProducto.MOUSE, 25000.0, "Logitech", "MX Master 3", 
-            "Inalámbrico, 4000 DPI, batería 70 días");
-        
-        Producto teclado1 = new Producto("Corsair K95 RGB", "Teclado mecánico gaming", 
-            CategoriaProducto.TECLADO, 35000.0, "Corsair", "K95 RGB", 
-            "Switches Cherry MX, RGB, 6 teclas macro");
-        
-        // Agregar productos al stock
-        stock.agregarProducto(laptop1, 10);
-        stock.agregarProducto(laptop2, 5);
-        stock.agregarProducto(smartphone1, 15);
-        stock.agregarProducto(smartphone2, 12);
-        stock.agregarProducto(mouse1, 25);
-        stock.agregarProducto(teclado1, 8);
-    }
 
 }
