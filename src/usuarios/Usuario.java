@@ -1,5 +1,6 @@
 package usuarios;
 
+import java.time.LocalDateTime;
 import java.util.Objects;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -13,6 +14,8 @@ public abstract class Usuario implements Comparable<Usuario> {
     private Rol rol;
     private int estado = 0;
     private String dni;
+    private LocalDateTime fechaRegistro;
+    private LocalDateTime ultimoAcceso;
 
     /**
      * Regex (EMAIL_REGEX): Esta expresión regular verifica que la cadena contenga:
@@ -65,11 +68,15 @@ public abstract class Usuario implements Comparable<Usuario> {
             throw new IllegalArgumentException("Error: El DNI debe contener exactamente 8 dígitos numéricos.");
         }
         this.dni = dni;
+        this.fechaRegistro = LocalDateTime.now();
+        this.ultimoAcceso = null;
     }
 
     public Usuario() {
         this.id = contador;
         contador++;
+        this.fechaRegistro = LocalDateTime.now();
+        this.ultimoAcceso = null;
     }
 
     // ---------------------- GETTERS Y SETTERS ----------------------
@@ -127,6 +134,15 @@ public abstract class Usuario implements Comparable<Usuario> {
         }
         this.dni = dni;
     }
+    public LocalDateTime getFechaRegistro() {
+        return fechaRegistro;
+    }
+    public LocalDateTime getUltimoAcceso() {
+        return ultimoAcceso;
+    }
+    public void actualizarUltimoAcceso() {
+        this.ultimoAcceso = LocalDateTime.now();
+    }
 
     // ---------------------- MÉTODOS SOBREESCRITOS ----------------------
     @Override
@@ -139,6 +155,8 @@ public abstract class Usuario implements Comparable<Usuario> {
                 "  🔢 DNI: " + dni + "\n" +
                 "  💼 Rol: " + (rol != null ? rol : "No Asignado") + "\n" +
                 "  🟢 Estado: " + (estado == 1 ? "Activo" : "Inactivo") + "\n" +
+                "  📅 Fecha Registro: " + (fechaRegistro != null ? fechaRegistro.toString() : "No disponible") + "\n" +
+                "  🕒 Último Acceso: " + (ultimoAcceso != null ? ultimoAcceso.toString() : "Nunca") + "\n" +
                 "══════════════════════════════════";
     }
     @Override

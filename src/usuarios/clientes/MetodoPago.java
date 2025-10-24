@@ -3,7 +3,7 @@ package usuarios.clientes;
 public enum MetodoPago {
     QR,
     DEBITO,
-    CREDITO,
+    TARJETA_CREDITO,
     BILLETERA_VIRTUAL,
-    EFECTIVO,
+    EFECTIVO
 }
