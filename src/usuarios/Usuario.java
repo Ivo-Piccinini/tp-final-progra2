@@ -58,6 +58,9 @@ public abstract class Usuario implements Comparable<Usuario> {
     public static int getContador() {
         return contador;
     }
+    public static void setContador(int nuevoContador) {
+        contador = nuevoContador;
+    }
     public String getNombre() {
         return nombre;
     }

@@ -54,9 +54,19 @@ public class InterfazUsuario {
     private void mostrarMenuNoLogueado() {
         System.out.println("🔐 MENÚ PRINCIPAL");
         System.out.println("═══════════════════════════════════");
-        System.out.println("1. 🔑 Iniciar Sesión");
-        System.out.println("2. 📝 Registrarse");
-        System.out.println("3. ❌ Salir");
+        
+        if (sistema.hayUsuariosRegistrados()) {
+            System.out.println("1. 🔑 Iniciar Sesión");
+            System.out.println("2. 📝 Registrarse");
+            System.out.println("3. ❌ Salir");
+        } else {
+            System.out.println("⚠️  No hay usuarios registrados en el sistema.");
+            System.out.println("📝 Por favor, regístrese primero.");
+            System.out.println("═══════════════════════════════════");
+            System.out.println("1. 📝 Registrarse");
+            System.out.println("2. ❌ Salir");
+        }
+        
         System.out.println("═══════════════════════════════════");
     }
     
@@ -105,19 +115,35 @@ public class InterfazUsuario {
     }
     
     private void procesarOpcionNoLogueado(int opcion) {
-        switch (opcion) {
-            case 1:
-                iniciarSesion();
-                break;
-            case 2:
-                registrarse();
-                break;
-            case 3:
-                salir();
-                break;
-            default:
-                System.out.println("❌ Opción no válida.");
-                pausar();
+        if (sistema.hayUsuariosRegistrados()) {
+            // Menú con opción de iniciar sesión
+            switch (opcion) {
+                case 1:
+                    iniciarSesion();
+                    break;
+                case 2:
+                    registrarse();
+                    break;
+                case 3:
+                    salir();
+                    break;
+                default:
+                    System.out.println("❌ Opción no válida.");
+                    pausar();
+            }
+        } else {
+            // Menú sin opción de iniciar sesión
+            switch (opcion) {
+                case 1:
+                    registrarse();
+                    break;
+                case 2:
+                    salir();
+                    break;
+                default:
+                    System.out.println("❌ Opción no válida.");
+                    pausar();
+            }
         }
     }
     

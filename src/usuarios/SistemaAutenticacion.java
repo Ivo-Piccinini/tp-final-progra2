@@ -57,6 +57,13 @@ public class SistemaAutenticacion {
     
     // ---------------------- LOGIN ----------------------
     public boolean login(String email, String password) {
+        // Verificar si hay usuarios registrados
+        if (usuarios.isEmpty() || credenciales.isEmpty()) {
+            System.out.println("❌ Error: No hay usuarios registrados en el sistema.");
+            System.out.println("📝 Por favor, regístrese primero antes de iniciar sesión.");
+            return false;
+        }
+        
         if (email == null || password == null) {
             System.out.println("❌ Error: Email o contraseña no pueden ser nulos.");
             return false;
@@ -110,6 +117,13 @@ public class SistemaAutenticacion {
             }
         }
         return usuariosPorRol;
+    }
+    
+    /**
+     * Verifica si hay usuarios registrados en el sistema
+     */
+    public boolean hayUsuariosRegistrados() {
+        return !usuarios.isEmpty() && !credenciales.isEmpty();
     }
     
     // ---------------------- METODOS DE PERSISTENCIA ----------------------

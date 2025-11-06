@@ -33,6 +33,8 @@ public class GestorUsuariosJSON {
             jsonObject.put("usuarios", serializarLista(usuarios, sistemaAutenticacion));
             jsonObject.put("fechaActualizacion", java.time.LocalDateTime.now().toString());
             jsonObject.put("totalUsuarios", usuarios.size());
+            // Guardar el contador actual para mantener la secuencia de IDs
+            jsonObject.put("contadorUsuarios", Usuario.getContador());
             
             OperacionesLectoEscritura.grabar(nombreArchivo, jsonObject);
             System.out.println("✅ Usuarios guardados exitosamente en: " + nombreArchivo);
@@ -46,6 +48,7 @@ public class GestorUsuariosJSON {
      */
     public ArrayList<Usuario> cargarUsuarios(String nombreArchivo) {
         ArrayList<Usuario> usuarios = new ArrayList<>();
+        int maxId = 0;
         try {
             FileReader fileReader = new FileReader(nombreArchivo);
             org.json.JSONTokener tokener = new org.json.JSONTokener(fileReader);
@@ -58,7 +61,20 @@ public class GestorUsuariosJSON {
                 Usuario usuario = deserializarUsuario(usuarioJson);
                 if (usuario != null) {
                     usuarios.add(usuario);
+                    // Encontrar el ID máximo para actualizar el contador
+                    if (usuario.getId() > maxId) {
+                        maxId = usuario.getId();
+                    }
                 }
+            }
+            
+            // Restaurar el contador: usar el valor guardado si existe, sino usar el máximo ID encontrado
+            if (jsonObject.has("contadorUsuarios")) {
+                int contadorGuardado = jsonObject.getInt("contadorUsuarios");
+                Usuario.setContador(contadorGuardado);
+            } else {
+                // Si no hay contador guardado, usar el máximo ID encontrado
+                Usuario.setContador(maxId);
             }
             
         } catch (Exception e) {
@@ -215,8 +231,9 @@ public class GestorUsuariosJSON {
             } else if ("VENDEDOR".equals(tipoUsuario)) {
                 double salario = usuarioJson.getDouble("salario");
                 double comision = usuarioJson.getDouble("comision");
+                int cantVentas = usuarioJson.optInt("totalVentas", 0);
                 
-                Vendedor vendedor = new Vendedor(nombre, apellido, email, rol, estado, dni, id, salario);
+                Vendedor vendedor = new Vendedor(id, nombre, apellido, email, rol, estado, dni, cantVentas, salario);
                 vendedor.setComisionPorVenta(comision);
                 
                 return vendedor;

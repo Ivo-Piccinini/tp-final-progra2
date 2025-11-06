@@ -60,6 +60,10 @@ public class SistemaComercio {
     public boolean estaLogueado() {
         return sistemaAutenticacion.estaLogueado();
     }
+    
+    public boolean hayUsuariosRegistrados() {
+        return sistemaAutenticacion.hayUsuariosRegistrados();
+    }
 
     // ---------------------- METODOS DE PERSISTENCIA ----------------------
     
