@@ -38,6 +38,15 @@ public class Cliente extends Usuario {
         this.preferencias = new ArrayList<>();
     }
 
+    public Cliente(int id, String nombre, String apellido, String email, Rol rol, int estado, String dni, int cantProductosComprados, MetodoPago metodoPago, double saldo, String direccion, String telefono) {
+        super(id, nombre, apellido, email, rol, estado, dni);
+        this.cantProductosComprados = cantProductosComprados;
+        this.metodoPago = metodoPago;
+        this.saldo = saldo;
+        this.direccion = direccion;
+        this.telefono = telefono;
+    }
+
     // ---------------------- GETTERS Y SETTERS ----------------------
     public int getCantProductosComprados() {
         return cantProductosComprados;
@@ -84,19 +93,9 @@ public class Cliente extends Usuario {
     
     // ---------------------- METODOS  ----------------------
     public void agregarCompra(String descripcionCompra) {
-        String compra = LocalDateTime.now().toString() + " - " + descripcionCompra;
+        String compra = LocalDateTime.now() + " - " + descripcionCompra;
         historialCompras.add(compra);
         cantProductosComprados++;
-    }
-    
-    public void agregarPreferencia(String preferencia) {
-        if (!preferencias.contains(preferencia)) {
-            preferencias.add(preferencia);
-        }
-    }
-    
-    public void removerPreferencia(String preferencia) {
-        preferencias.remove(preferencia);
     }
     
     /**
@@ -117,17 +116,6 @@ public class Cliente extends Usuario {
         } else {
             for (String compra : historialCompras) {
                 System.out.println("  • " + compra);
-            }
-        }
-    }
-    
-    public void mostrarPreferencias() {
-        System.out.println("⭐ PREFERENCIAS DEL CLIENTE:");
-        if (preferencias.isEmpty()) {
-            System.out.println("  No hay preferencias registradas.");
-        } else {
-            for (String preferencia : preferencias) {
-                System.out.println("  • " + preferencia);
             }
         }
     }

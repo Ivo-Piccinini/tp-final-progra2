@@ -40,6 +40,54 @@ public class Venta {
         this.fechaVenta = LocalDateTime.now();
         this.estado = "PENDIENTE";
     }
+
+    // ---------------------- GETTERS Y SETTERS ----------------------
+    public int getId() {
+        return id;
+    }
+    public static int getContador() {
+        return contador;
+    }
+    public Cliente getCliente() {
+        return cliente;
+    }
+    public Vendedor getVendedor() {
+        return vendedor;
+    }
+    public List<DetalleVenta> getDetalles() {
+        return new ArrayList<>(detalles);
+    }
+    public double getSubtotal() {
+        return subtotal;
+    }
+    public double getDescuento() {
+        return descuento;
+    }
+    public double getTotal() {
+        return total;
+    }
+    public LocalDateTime getFechaVenta() {
+        return fechaVenta;
+    }
+    public String getEstado() {
+        return estado;
+    }
+    public MetodoPago getMetodoPago() {
+        return metodoPago;
+    }
+    public void setMetodoPago(MetodoPago metodoPago) {
+        this.metodoPago = metodoPago;
+    }
+    public int getCantidadProductos() {
+        return detalles.size();
+    }
+    public int getCantidadTotalItems() {
+        int total = 0;
+        for (DetalleVenta detalle : detalles) {
+            total += detalle.getCantidad();
+        }
+        return total;
+    }
     
     // ---------------------- MÉTODOS DE GESTIÓN ----------------------
     public boolean agregarProducto(Producto producto, int cantidad, Stock stock) {
@@ -59,12 +107,12 @@ public class Venta {
         // Verificar si el producto ya está en la venta
         for (DetalleVenta detalle : detalles) {
             if (detalle.getProducto().getId() == producto.getId()) {
-                // Producto ya existe, actualizar cantidad
                 detalle.setCantidad(detalle.getCantidad() + cantidad);
                 actualizarTotales();
                 return true;
             }
         }
+
         
         // Producto nuevo en la venta
         DetalleVenta nuevoDetalle = new DetalleVenta(producto, cantidad);
@@ -110,7 +158,7 @@ public class Venta {
         for (DetalleVenta detalle : detalles) {
             if (!stock.hayStock(detalle.getProducto().getId(), detalle.getCantidad())) {
                 System.out.println("❌ No hay suficiente stock del producto: " + detalle.getProducto().getNombre());
-                return false; // No hay suficiente stock
+                return false;
             }
         }
         
@@ -164,10 +212,6 @@ public class Venta {
         return true;
     }
     
-    public void cancelarVenta() {
-        this.estado = "CANCELADA";
-    }
-    
     public void aplicarDescuento(double porcentajeDescuento) {
         if (porcentajeDescuento < 0 || porcentajeDescuento > 100) {
             throw new IllegalArgumentException("El porcentaje de descuento debe estar entre 0 y 100.");
@@ -182,67 +226,6 @@ public class Venta {
             subtotal += detalle.getSubtotal();
         }
         total = subtotal - descuento;
-    }
-    
-    // ---------------------- GETTERS Y SETTERS ----------------------
-    public int getId() {
-        return id;
-    }
-    
-    public static int getContador() {
-        return contador;
-    }
-    
-    public Cliente getCliente() {
-        return cliente;
-    }
-    
-    public Vendedor getVendedor() {
-        return vendedor;
-    }
-    
-    public List<DetalleVenta> getDetalles() {
-        return new ArrayList<>(detalles);
-    }
-    
-    public double getSubtotal() {
-        return subtotal;
-    }
-    
-    public double getDescuento() {
-        return descuento;
-    }
-    
-    public double getTotal() {
-        return total;
-    }
-    
-    public LocalDateTime getFechaVenta() {
-        return fechaVenta;
-    }
-    
-    public String getEstado() {
-        return estado;
-    }
-    
-    public MetodoPago getMetodoPago() {
-        return metodoPago;
-    }
-    
-    public void setMetodoPago(MetodoPago metodoPago) {
-        this.metodoPago = metodoPago;
-    }
-    
-    public int getCantidadProductos() {
-        return detalles.size();
-    }
-    
-    public int getCantidadTotalItems() {
-        int total = 0;
-        for (DetalleVenta detalle : detalles) {
-            total += detalle.getCantidad();
-        }
-        return total;
     }
     
     // ---------------------- MÉTODOS DE CONSULTA ----------------------

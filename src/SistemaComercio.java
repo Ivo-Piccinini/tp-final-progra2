@@ -37,7 +37,6 @@ public class SistemaComercio {
         System.out.println("🚀 SISTEMA DE COMERCIO DE TECNOLOGÍA INICIADO");
         System.out.println("═══════════════════════════════════════════════");
         System.out.println("📅 Fecha de inicio: " + fechaInicioSistema);
-        System.out.println("📦 Stock cargado desde archivo JSON");
         System.out.println("═══════════════════════════════════════════════\n");
     }
     
@@ -69,14 +68,8 @@ public class SistemaComercio {
      */
     private void cargarStockDesdeArchivo() {
         try {
-            System.out.println("🔍 Intentando cargar stock desde: " + ARCHIVO_STOCK);
             this.stock = stockJSON.cargarStock(ARCHIVO_STOCK);
-            System.out.println("✅ Stock cargado exitosamente desde archivo JSON");
-            System.out.println("📦 Productos en stock: " + stock.getCantidadProductos());
-            System.out.println("📊 Stock total: " + stock.getStockTotal() + " unidades");
-        } catch (Exception e) {
-            System.out.println("⚠️ Error al cargar stock, creando stock vacío: " + e.getMessage());
-            e.printStackTrace(); // Para ver el error completo
+        } catch (Exception e){
             this.stock = new Stock();
         }
     }
@@ -95,41 +88,6 @@ public class SistemaComercio {
         }
     }
     
-    /**
-     * Verifica si existe un archivo de stock
-     */
-    public boolean existeArchivoStock() {
-        return stockJSON.existeArchivoStock();
-    }
-    
-    /**
-     * Elimina el archivo de stock
-     */
-    public boolean eliminarArchivoStock() {
-        return stockJSON.eliminarArchivoStock();
-    }
-    
-    /**
-     * Método de debugging para verificar el estado del stock
-     */
-    public void debugStock() {
-        System.out.println("🔍 DEBUG STOCK:");
-        System.out.println("  📦 Total productos: " + stock.getCantidadProductos());
-        System.out.println("  📊 Stock total: " + stock.getStockTotal() + " unidades");
-        System.out.println("  💰 Valor total: $" + String.format("%.2f", stock.getValorTotalInventario()));
-        System.out.println("  🕒 Última actualización: " + stock.getUltimaActualizacion());
-        
-        if (stock.getCantidadProductos() > 0) {
-            System.out.println("  📋 Productos en stock:");
-            for (Map.Entry<Integer, Integer> entry : stock.getInventario().entrySet()) {
-                Producto producto = stock.getProductos().get(entry.getKey());
-                if (producto != null) {
-                    System.out.println("    • ID: " + entry.getKey() + " | " + producto.getNombre() + " | Cantidad: " + entry.getValue());
-                }
-            }
-        }
-    }
-    
     // ---------------------- METODOS ----------------------
     
     public void mostrarInventario() {
@@ -137,8 +95,6 @@ public class SistemaComercio {
     }
     
     public void mostrarProductosDisponibles() {
-        // Debug: Verificar estado del stock
-        System.out.println("🔍 DEBUG - Estado del stock:");
         System.out.println("  📦 Total productos: " + stock.getCantidadProductos());
         System.out.println("  📊 Stock total: " + stock.getStockTotal() + " unidades");
         System.out.println("  🛍️ Productos disponibles: " + stock.getCantidadProductosDisponibles());
@@ -356,7 +312,7 @@ public class SistemaComercio {
     }
     
     // ---------------------- METODOS DE GESTION DE VENTAS ----------------------
-    public Venta crearVentaSimple() {
+    public Venta crearVenta() {
         if (!estaLogueado()) {
             System.out.println("❌ Error: Debe estar logueado para crear una venta.");
             return null;
@@ -415,8 +371,7 @@ public class SistemaComercio {
         System.out.println("═══════════════════════════════════");
         for (int i = 0; i < clientes.size(); i++) {
             Cliente cliente = clientes.get(i);
-            System.out.println((i + 1) + ". " + cliente.getNombre() + " " + cliente.getApellido() + 
-                             " (" + cliente.getEmail() + ")");
+            System.out.println((i + 1) + ". " + cliente.getNombre() + " " + cliente.getApellido() + " (" + cliente.getEmail() + ")");
             System.out.println("💰 Saldo: $" + String.format("%.2f", cliente.getSaldo()) +" | 🛍️ Compras: " + cliente.getCantProductosComprados());
         }
         System.out.println("═══════════════════════════════════");
@@ -431,7 +386,6 @@ public class SistemaComercio {
                 if (opcion == 0) {
                     // Mostrar detalles de todos los clientes
                     mostrarDetallesClientes(clientes);
-                    continue;
                 } else if (opcion >= 1 && opcion <= clientes.size()) {
                     Cliente clienteSeleccionado = clientes.get(opcion - 1);
                     System.out.println("✅ Cliente seleccionado: " + clienteSeleccionado.getNombre() + " " + clienteSeleccionado.getApellido());
@@ -441,11 +395,13 @@ public class SistemaComercio {
                 }
             } catch (InputMismatchException e) {
                 System.out.println("❌ Debe ingresar un número válido.");
-                scanner.nextLine(); // Limpiar buffer
+                scanner.nextLine();
             }
         }
     }
-    
+
+
+
     /**
      * Muestra detalles completos de todos los clientes
      */
@@ -462,7 +418,6 @@ public class SistemaComercio {
             System.out.println("   💰 Saldo: $" + String.format("%.2f", cliente.getSaldo()));
             System.out.println("   🛍️ Compras realizadas: " + cliente.getCantProductosComprados());
             System.out.println("   💳 Método de pago: " + cliente.getMetodoPago());
-            System.out.println("   ⭐ Preferencias: " + cliente.getPreferencias().size() + " registradas");
             System.out.println("   📅 Miembro desde: " + cliente.getFechaRegistro());
             System.out.println("   ───────────────────────────────────────────────────────────");
         }
@@ -488,8 +443,7 @@ public class SistemaComercio {
     /**
      * Permite a un vendedor agregar un nuevo producto al stock
      */
-    public boolean agregarProductoAlStock(String nombre, String descripcion, CategoriaProducto categoria, 
-                                        double precio, String marca, String modelo, String especificaciones, int cantidad) {
+    public boolean agregarProductoAlStock(String nombre, String descripcion, CategoriaProducto categoria, double precio, String marca, String modelo, String especificaciones, int cantidad) {
         if (!(getUsuarioActual() instanceof Vendedor)) {
             System.out.println("❌ Solo los vendedores pueden agregar productos al stock.");
             return false;
@@ -547,17 +501,4 @@ public class SistemaComercio {
             }
         }
     }
-
-
-    // ---------------------- MÉTODOS DE INICIALIZACIÓN ----------------------
-    public void inicializarSistema() {
-        // Solo mostrar información del stock cargado
-        if (stock.getCantidadProductos() > 0) {
-            System.out.println("📦 Stock cargado con " + stock.getCantidadProductos() + " productos");
-        } else {
-            System.out.println("📦 Stock vacío - No hay productos cargados");
-        }
-    }
-    
-
 }

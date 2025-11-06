@@ -7,6 +7,8 @@ import inventario.Stock;
 import productos.Producto;
 import productos.CategoriaProducto;
 
+import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.util.ArrayList;
 import java.util.Map;
@@ -20,8 +22,9 @@ public class StockJSON {
      * Guarda el stock en un archivo JSON
      */
     public void guardarStock(Stock stock, String nombreArchivo) {
+            JSONObject jsonObject = null;
         try {
-            JSONObject jsonObject = new JSONObject();
+            jsonObject = new JSONObject();
             jsonObject.put("fechaActualizacion", stock.getUltimaActualizacion().toString());
             jsonObject.put("stockTotal", stock.getStockTotal());
             jsonObject.put("cantidadProductos", stock.getCantidadProductos());
@@ -61,16 +64,8 @@ public class StockJSON {
         
         try {
             // Verificar si el archivo existe y no está vacío
-            java.io.File archivo = new java.io.File(nombreArchivo);
-            if (!archivo.exists()) {
-                System.out.println("📁 Archivo de stock no encontrado: " + nombreArchivo);
-                System.out.println("📦 Creando stock vacío.");
-                return stock;
-            }
-            
-            if (archivo.length() == 0) {
-                System.out.println("📁 Archivo de stock está vacío: " + nombreArchivo);
-                System.out.println("📦 Creando stock vacío.");
+            File archivo = new File(nombreArchivo);
+            if (!archivo.exists() || archivo.length() == 0) {
                 return stock;
             }
             
@@ -93,19 +88,15 @@ public class StockJSON {
                 }
             }
             
-            System.out.println("✅ Stock cargado exitosamente desde: " + nombreArchivo);
-            System.out.println("📦 Productos cargados: " + stock.getCantidadProductos());
-            System.out.println("📊 Stock total: " + stock.getStockTotal() + " unidades");
-            
-        } catch (java.io.FileNotFoundException e) {
+        } catch (FileNotFoundException e) {
             System.out.println("📁 Archivo de stock no encontrado: " + nombreArchivo);
             System.out.println("📦 Creando stock vacío.");
-        } catch (org.json.JSONException e) {
+        } catch (JSONException e) {
             System.out.println("❌ Error de formato JSON en archivo: " + nombreArchivo);
             System.out.println("📁 El archivo puede estar corrupto. Creando stock vacío.");
             // Eliminar archivo corrupto
             try {
-                new java.io.File(nombreArchivo).delete();
+                new File(nombreArchivo).delete();
                 System.out.println("🗑️ Archivo corrupto eliminado.");
             } catch (Exception deleteError) {
                 System.out.println("⚠️ No se pudo eliminar el archivo corrupto.");
@@ -163,30 +154,6 @@ public class StockJSON {
         } catch (Exception e) {
             System.out.println("⚠️ Error al deserializar producto: " + e.getMessage());
             return null;
-        }
-    }
-
-    /**
-     * Verifica si existe el archivo de stock
-     */
-    public boolean existeArchivoStock() {
-        return new java.io.File(ARCHIVO_STOCK).exists();
-    }
-
-    /**
-     * Elimina el archivo de stock
-     */
-    public boolean eliminarArchivoStock() {
-        try {
-            java.io.File archivo = new java.io.File(ARCHIVO_STOCK);
-            boolean eliminado = archivo.delete();
-            if (eliminado) {
-                System.out.println("🗑️ Archivo de stock eliminado.");
-            }
-            return eliminado;
-        } catch (Exception e) {
-            System.out.println("❌ Error al eliminar archivo: " + e.getMessage());
-            return false;
         }
     }
 }

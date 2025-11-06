@@ -4,6 +4,7 @@ import org.json.JSONArray;
 import org.json.JSONObject;
 import org.json.JSONException;
 import usuarios.Credenciales;
+import usuarios.Rol;
 import usuarios.SistemaAutenticacion;
 import usuarios.Usuario;
 import usuarios.clientes.Cliente;
@@ -12,6 +13,7 @@ import usuarios.clientes.MetodoPago;
 
 import java.io.FileReader;
 import java.io.IOException;
+import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
@@ -59,9 +61,6 @@ public class GestorUsuariosJSON {
                 }
             }
             
-            System.out.println("✅ Usuarios cargados exitosamente desde: " + nombreArchivo);
-            System.out.println("👥 Total de usuarios cargados: " + usuarios.size());
-            
         } catch (Exception e) {
             System.out.println("❌ Error al cargar usuarios: " + e.getMessage());
         }
@@ -90,9 +89,6 @@ public class GestorUsuariosJSON {
                 usuarios.Credenciales credencial = new usuarios.Credenciales(email, password);
                 credenciales.put(email, credencial);
             }
-            
-            System.out.println("✅ Credenciales cargadas exitosamente desde: " + nombreArchivo);
-            System.out.println("🔐 Total de credenciales cargadas: " + credenciales.size());
             
         } catch (Exception e) {
             System.out.println("❌ Error al cargar credenciales: " + e.getMessage());
@@ -125,8 +121,6 @@ public class GestorUsuariosJSON {
      */
     private JSONObject serializarUsuario(Usuario usuario, SistemaAutenticacion sistemaAutenticacion) throws JSONException {
         JSONObject usuarioJson = new JSONObject();
-        
-        // Datos básicos de Usuario
         usuarioJson.put("id", usuario.getId());
         usuarioJson.put("nombre", usuario.getNombre());
         usuarioJson.put("apellido", usuario.getApellido());
@@ -139,12 +133,12 @@ public class GestorUsuariosJSON {
         // Obtener y guardar la contraseña
         try {
             // Acceder a las credenciales del sistema de autenticación
-            java.lang.reflect.Field credencialesField = SistemaAutenticacion.class.getDeclaredField("credenciales");
+            Field credencialesField = SistemaAutenticacion.class.getDeclaredField("credenciales");
             credencialesField.setAccessible(true);
             @SuppressWarnings("unchecked")
             Map<String, usuarios.Credenciales> credenciales = (Map<String, usuarios.Credenciales>) credencialesField.get(sistemaAutenticacion);
             
-            usuarios.Credenciales credencial = credenciales.get(usuario.getEmail());
+            Credenciales credencial = credenciales.get(usuario.getEmail());
             if (credencial != null) {
                 usuarioJson.put("password", credencial.getPassword());
             } else {
@@ -172,20 +166,11 @@ public class GestorUsuariosJSON {
             }
             usuarioJson.put("historialCompras", historialArray);
             
-            // Preferencias
-            JSONArray preferenciasArray = new JSONArray();
-            for (String preferencia : cliente.getPreferencias()) {
-                preferenciasArray.put(preferencia);
-            }
-            usuarioJson.put("preferencias", preferenciasArray);
-            
         } else if (usuario instanceof Vendedor) {
             Vendedor vendedor = (Vendedor) usuario;
             usuarioJson.put("tipoUsuario", "VENDEDOR");
             usuarioJson.put("salario", vendedor.getSalario());
             usuarioJson.put("comision", vendedor.getComisionPorVenta());
-            usuarioJson.put("metaVentas", vendedor.getMetaVentasMensual());
-            usuarioJson.put("especializacion", vendedor.getEspecializacion() != null ? vendedor.getEspecializacion() : "");
             usuarioJson.put("ventasRealizadas", vendedor.getHistorialVentas());
             usuarioJson.put("totalVentas", vendedor.getCantVentas());
         }
@@ -198,14 +183,14 @@ public class GestorUsuariosJSON {
      */
     private Usuario deserializarUsuario(JSONObject usuarioJson) {
         try {
+            int id = usuarioJson.getInt("id");
             String tipoUsuario = usuarioJson.getString("tipoUsuario");
             String nombre = usuarioJson.getString("nombre");
             String apellido = usuarioJson.getString("apellido");
             String email = usuarioJson.getString("email");
-            usuarios.Rol rol = usuarios.Rol.valueOf(usuarioJson.getString("rol"));
+            Rol rol = Rol.valueOf(usuarioJson.getString("rol"));
             int estado = usuarioJson.getInt("estado");
             String dni = usuarioJson.getString("dni");
-            String password = usuarioJson.optString("password", "temp123"); // Contraseña por defecto si no existe
             
             if ("CLIENTE".equals(tipoUsuario)) {
                 int cantProductosComprados = usuarioJson.getInt("cantProductosComprados");
@@ -214,8 +199,8 @@ public class GestorUsuariosJSON {
                 String direccion = usuarioJson.optString("direccion", "");
                 String telefono = usuarioJson.optString("telefono", "");
                 
-                Cliente cliente = new Cliente(nombre, apellido, email, rol, estado, dni, 
-                    cantProductosComprados, metodoPago, saldo, direccion, telefono);
+                Cliente cliente = new Cliente(id, nombre, apellido, email, rol, estado, dni,
+                        cantProductosComprados, metodoPago, saldo, direccion, telefono);
                 
                 // Cargar historial de compras
                 JSONArray historialArray = usuarioJson.optJSONArray("historialCompras");
@@ -225,26 +210,14 @@ public class GestorUsuariosJSON {
                     }
                 }
                 
-                // Cargar preferencias
-                JSONArray preferenciasArray = usuarioJson.optJSONArray("preferencias");
-                if (preferenciasArray != null) {
-                    for (int i = 0; i < preferenciasArray.length(); i++) {
-                        cliente.agregarPreferencia(preferenciasArray.getString(i));
-                    }
-                }
-                
                 return cliente;
                 
             } else if ("VENDEDOR".equals(tipoUsuario)) {
                 double salario = usuarioJson.getDouble("salario");
                 double comision = usuarioJson.getDouble("comision");
-                int metaVentas = usuarioJson.getInt("metaVentas");
-                String especializacion = usuarioJson.optString("especializacion", "");
                 
-                Vendedor vendedor = new Vendedor(nombre, apellido, email, rol, estado, dni, salario);
+                Vendedor vendedor = new Vendedor(nombre, apellido, email, rol, estado, dni, id, salario);
                 vendedor.setComisionPorVenta(comision);
-                vendedor.setMetaVentasMensual(metaVentas);
-                vendedor.setEspecializacion(especializacion);
                 
                 return vendedor;
             }
@@ -261,22 +234,5 @@ public class GestorUsuariosJSON {
      */
     public boolean existeArchivoUsuarios() {
         return new java.io.File(ARCHIVO_USUARIOS).exists();
-    }
-
-    /**
-     * Elimina el archivo de usuarios
-     */
-    public boolean eliminarArchivoUsuarios() {
-        try {
-            java.io.File archivo = new java.io.File(ARCHIVO_USUARIOS);
-            boolean eliminado = archivo.delete();
-            if (eliminado) {
-                System.out.println("🗑️ Archivo de usuarios eliminado.");
-            }
-            return eliminado;
-        } catch (Exception e) {
-            System.out.println("❌ Error al eliminar archivo: " + e.getMessage());
-            return false;
-        }
     }
 }

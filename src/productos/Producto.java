@@ -1,5 +1,7 @@
 package productos;
 
+import org.json.JSONObject;
+
 import java.time.LocalDateTime;
 
 /**
@@ -45,83 +47,64 @@ public class Producto {
     public int getId() {
         return id;
     }
-
     public void setId(int id) {}
-    
     public static int getContador() {
         return contador;
     }
-    
     public String getNombre() {
         return nombre;
     }
-    
     public void setNombre(String nombre) {
         if (nombre == null || nombre.trim().isEmpty()) {
             throw new IllegalArgumentException("El nombre del producto no puede estar vacío.");
         }
         this.nombre = nombre;
     }
-    
     public String getDescripcion() {
         return descripcion;
     }
-    
     public void setDescripcion(String descripcion) {
         this.descripcion = descripcion;
     }
-    
     public CategoriaProducto getCategoria() {
         return categoria;
     }
-    
     public void setCategoria(CategoriaProducto categoria) {
         this.categoria = categoria;
     }
-    
     public double getPrecio() {
         return precio;
     }
-    
     public void setPrecio(double precio) {
         if (precio < 0) {
             throw new IllegalArgumentException("El precio no puede ser negativo.");
         }
         this.precio = precio;
     }
-    
     public String getMarca() {
         return marca;
     }
-    
     public void setMarca(String marca) {
         this.marca = marca;
     }
-    
     public String getModelo() {
         return modelo;
     }
-    
     public void setModelo(String modelo) {
         this.modelo = modelo;
     }
-    
     public String getEspecificaciones() {
         return especificaciones;
     }
-    
     public void setEspecificaciones(String especificaciones) {
         this.especificaciones = especificaciones;
     }
-    
     public boolean isActivo() {
         return activo;
     }
-    
     public void setActivo(boolean activo) {
         this.activo = activo;
     }
-    
     public LocalDateTime getFechaCreacion() {
         return fechaCreacion;
     }
@@ -140,19 +123,6 @@ public class Producto {
             throw new IllegalArgumentException("El porcentaje de descuento debe estar entre 0 y 100.");
         }
         return precio * (1 - porcentajeDescuento / 100.0);
-    }
-    
-    public String obtenerInfoCompleta() {
-        return String.format("📱 %s - %s %s\n" +
-                           "💰 Precio: $%.2f\n" +
-                           "📂 Categoría: %s\n" +
-                           "📝 Descripción: %s\n" +
-                           "⚙️ Especificaciones: %s\n" +
-                           "📅 Creado: %s\n" +
-                           "🟢 Estado: %s",
-                           nombre, marca, modelo, precio, categoria, 
-                           descripcion, especificaciones, fechaCreacion,
-                           activo ? "Activo" : "Inactivo");
     }
     
     // ---------------------- METODOS SOBREESCRITOS ----------------------

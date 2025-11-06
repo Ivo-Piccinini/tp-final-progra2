@@ -1,4 +1,5 @@
 import productos.CategoriaProducto;
+import usuarios.Usuario;
 import usuarios.clientes.Cliente;
 import usuarios.vendedores.Vendedor;
 
@@ -22,8 +23,6 @@ public class InterfazUsuario {
     
     // ---------------------- METODO PRINCIPAL ----------------------
     public void ejecutar() {
-        sistema.inicializarSistema();
-        
         while (sistemaActivo) {
             try {
                 mostrarMenuPrincipal();
@@ -36,7 +35,7 @@ public class InterfazUsuario {
             }
         }
         
-        System.out.println("👋 ¡Gracias por usar el Sistema de Comercio de Tecnología!");
+        System.out.println("👋 ¡Gracias por usar nuestro sistema!");
     }
     
     // ---------------------- METODOS DE MENU  ----------------------
@@ -62,15 +61,15 @@ public class InterfazUsuario {
     }
     
     private void mostrarMenuLogueado() {
-        if (sistema.getUsuarioActual() instanceof usuarios.clientes.Cliente) {
+        if (sistema.getUsuarioActual() instanceof Cliente) {
             mostrarMenuCliente();
-        } else if (sistema.getUsuarioActual() instanceof usuarios.vendedores.Vendedor) {
+        } else if (sistema.getUsuarioActual() instanceof Vendedor) {
             mostrarMenuVendedor();
         }
     }
     
     private void mostrarMenuCliente() {
-        usuarios.clientes.Cliente cliente = (usuarios.clientes.Cliente) sistema.getUsuarioActual();
+        Cliente cliente = (Cliente) sistema.getUsuarioActual();
         System.out.println("🛍️ MENÚ CLIENTE - " + cliente.getNombre());
         System.out.println("═══════════════════════════════════");
         System.out.println("1. 👤 Ver Mi Información");
@@ -84,7 +83,7 @@ public class InterfazUsuario {
     }
     
     private void mostrarMenuVendedor() {
-        usuarios.vendedores.Vendedor vendedor = (usuarios.vendedores.Vendedor) sistema.getUsuarioActual();
+        Vendedor vendedor = (Vendedor) sistema.getUsuarioActual();
         System.out.println("💼 MENÚ VENDEDOR - " + vendedor.getNombre());
         System.out.println("═══════════════════════════════════");
         System.out.println("1. 👤 Ver Mi Información");
@@ -224,34 +223,25 @@ public class InterfazUsuario {
         
         while (!registroExitoso) {
             try {
-                // Solicitar datos básicos
                 String nombre = solicitarDato("Nombre", "texto");
                 String apellido = solicitarDato("Apellido", "texto");
                 String email = solicitarDato("Email", "email");
                 String dni = solicitarDato("DNI (8 dígitos)", "dni");
-                
-                // Solicitar tipo de usuario
                 int tipoUsuario = solicitarTipoUsuario();
-                
-                // Solicitar contraseña
                 String password = solicitarPassword();
-                
-                usuarios.Usuario usuario = null;
+                Usuario usuario = null;
                 
                 if (tipoUsuario == 1) {
                     // Crear cliente
                     String direccion = solicitarDato("Dirección", "texto");
                     String telefono = solicitarDato("Teléfono", "texto");
                     
-                    usuario = new usuarios.clientes.Cliente(nombre, apellido, email, usuarios.Rol.CLIENTE, 1, dni, 0, usuarios.clientes.MetodoPago.EFECTIVO, 0.0, direccion, telefono);
+                    usuario = new Cliente(nombre, apellido, email, usuarios.Rol.CLIENTE, 1, dni, 0, usuarios.clientes.MetodoPago.EFECTIVO, 0.0, direccion, telefono);
                 } else if (tipoUsuario == 2) {
                     // Crear vendedor
                     double salario = solicitarNumero("Salario base: $", "salario");
-                    double comision = solicitarNumero("Comisión por venta (%): ", "comision");
-                    int metaVentas = (int) solicitarNumero("Meta de ventas mensual: ", "meta");
-                    String especializacion = solicitarDato("Especialización", "texto");
                     
-                    usuario = new usuarios.vendedores.Vendedor(nombre, apellido, email, usuarios.Rol.VENDEDOR, 1, dni, salario);
+                    usuario = new Vendedor(nombre, apellido, email, usuarios.Rol.VENDEDOR, 1, dni, salario);
                 }
                 
                 if (usuario != null) {
@@ -284,7 +274,7 @@ public class InterfazUsuario {
     }
     
     private void limpiarPantalla() {
-        // Limpiar pantalla (funciona en la mayoría de terminales)
+        // Limpiar pantalla
         System.out.print("\033[H\033[2J");
         System.out.flush();
     }
@@ -472,7 +462,7 @@ public class InterfazUsuario {
      * Muestra información del cliente
      */
     private void mostrarInfoCliente() {
-        usuarios.clientes.Cliente cliente = (usuarios.clientes.Cliente) sistema.getUsuarioActual();
+        Cliente cliente = (Cliente) sistema.getUsuarioActual();
         System.out.println(cliente.toString());
         pausar();
     }
@@ -481,7 +471,7 @@ public class InterfazUsuario {
      * Muestra información del vendedor
      */
     private void mostrarInfoVendedor() {
-        usuarios.vendedores.Vendedor vendedor = (usuarios.vendedores.Vendedor) sistema.getUsuarioActual();
+        Vendedor vendedor = (Vendedor) sistema.getUsuarioActual();
         System.out.println(vendedor.toString());
         pausar();
     }
@@ -494,7 +484,7 @@ public class InterfazUsuario {
         System.out.println("═══════════════════════════════════");
         
         // Mostrar saldo actual
-        usuarios.clientes.Cliente cliente = (usuarios.clientes.Cliente) sistema.getUsuarioActual();
+        Cliente cliente = (Cliente) sistema.getUsuarioActual();
         System.out.println("💰 Su saldo actual: $" + String.format("%.2f", cliente.getSaldo()));
         System.out.println("═══════════════════════════════════");
         
@@ -553,7 +543,7 @@ public class InterfazUsuario {
         System.out.println("💰 AGREGAR SALDO");
         System.out.println("═══════════════════════════════════");
         
-        usuarios.clientes.Cliente cliente = (usuarios.clientes.Cliente) sistema.getUsuarioActual();
+        Cliente cliente = (Cliente) sistema.getUsuarioActual();
         System.out.println("💰 Saldo actual: $" + String.format("%.2f", cliente.getSaldo()));
         
         try {
@@ -626,6 +616,7 @@ public class InterfazUsuario {
             }
         } catch (NumberFormatException e) {
             System.out.println("❌ Debe ingresar un número válido.");
+            e.printStackTrace();
         }
         
         pausar();
@@ -666,7 +657,7 @@ public class InterfazUsuario {
             int cantidad = Integer.parseInt(scanner.nextLine());
             
             // Crear venta simple
-            var venta = sistema.crearVentaSimple();
+            var venta = sistema.crearVenta();
             if (venta != null) {
                 boolean exito = sistema.agregarProductoAVenta(venta, productoId, cantidad);
                 if (exito) {

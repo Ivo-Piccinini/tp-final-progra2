@@ -31,11 +31,9 @@ public class DetalleVenta {
     public Producto getProducto() {
         return producto;
     }
-    
     public int getCantidad() {
         return cantidad;
     }
-    
     public void setCantidad(int cantidad) {
         if (cantidad <= 0) {
             throw new IllegalArgumentException("La cantidad debe ser mayor a 0.");
@@ -43,11 +41,9 @@ public class DetalleVenta {
         this.cantidad = cantidad;
         this.subtotal = precioUnitario * cantidad;
     }
-    
     public double getPrecioUnitario() {
         return precioUnitario;
     }
-    
     public double getSubtotal() {
         return subtotal;
     }
@@ -73,8 +69,7 @@ public class DetalleVenta {
     // ---------------------- MÉTODOS SOBREESCRITOS ----------------------
     @Override
     public String toString() {
-        return String.format("📱 %s x%d = $%.2f",
-                           producto.getNombre(), cantidad, subtotal);
+        return String.format("📱 %s x%d = $%.2f",producto.getNombre(), cantidad, subtotal);
     }
     
     @Override

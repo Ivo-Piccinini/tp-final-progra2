@@ -103,22 +103,6 @@ public class Stock {
         return disponibles;
     }
     
-    public List<Producto> buscarProductos(String termino) {
-        List<Producto> resultados = new ArrayList<>();
-        String terminoFiltrado = termino.toLowerCase();
-        
-        for (Producto producto : productos.values()) {
-            if (producto.isActivo() && obtenerCantidad(producto.getId()) > 0) {
-                if (producto.getNombre().toLowerCase().contains(terminoFiltrado) ||
-                    producto.getMarca().toLowerCase().contains(terminoFiltrado) ||
-                    producto.getModelo().toLowerCase().contains(terminoFiltrado)) {
-                    resultados.add(producto);
-                }
-            }
-        }
-        return resultados;
-    }
-    
     // ---------------------- METODOS DE ESTADISTICAS ----------------------
     public int getStockTotal() {
         return stockTotal;
@@ -150,14 +134,14 @@ public class Stock {
     // ---------------------- METODOS PARA PERSISTENCIA ----------------------
     
     /**
-     * Obtiene el inventario interno (para persistencia)
+     * Obtiene el inventario interno
      */
     public Map<Integer, Integer> getInventario() {
         return new HashMap<>(inventario);
     }
     
     /**
-     * Obtiene los productos internos (para persistencia)
+     * Obtiene los productos internos
      */
     public Map<Integer, Producto> getProductos() {
         return new HashMap<>(productos);

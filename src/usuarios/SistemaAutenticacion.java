@@ -89,28 +89,6 @@ public class SistemaAutenticacion {
     }
     
     // ---------------------- METODOS  ----------------------
-    public boolean cambiarPassword(String passwordActual, String passwordNueva) {
-        if (usuarioActual == null) {
-            System.out.println("❌ Error: No hay usuario logueado.");
-            return false;
-        }
-        
-        if (passwordNueva.length() < 6) {
-            System.out.println("❌ Error: La nueva contraseña debe tener al menos 6 caracteres.");
-            return false;
-        }
-        
-        String email = usuarioActual.getEmail();
-        Credenciales creds = credenciales.get(email);
-        
-        try {
-            creds.cambiarPassword(passwordActual, passwordNueva);
-            return true;
-        } catch (IllegalArgumentException e) {
-            System.out.println(e.getMessage());
-            return false;
-        }
-    }
 
     public Usuario getUsuarioActual() {
         return usuarioActual;
@@ -118,21 +96,6 @@ public class SistemaAutenticacion {
     
     public boolean estaLogueado() {
         return usuarioActual != null;
-    }
-    
-    public String getTipoUsuario() {
-        if (usuarioActual == null) {
-            return "Ninguno";
-        }
-        return usuarioActual.getRol().toString();
-    }
-    
-    public void mostrarInfoUsuarioActual() {
-        if (usuarioActual != null) {
-            System.out.println(usuarioActual.toString());
-        } else {
-            System.out.println("❌ No hay usuario logueado.");
-        }
     }
     
     public List<Usuario> listarUsuarios() {
@@ -147,14 +110,6 @@ public class SistemaAutenticacion {
             }
         }
         return usuariosPorRol;
-    }
-    
-    public void mostrarEstadisticas() {
-        System.out.println("📊 ESTADÍSTICAS DEL SISTEMA:");
-        System.out.println("  👥 Total usuarios: " + usuarios.size());
-        System.out.println("  👤 Clientes: " + listarUsuariosPorRol(Rol.CLIENTE).size());
-        System.out.println("  👨‍💼 Vendedores: " + listarUsuariosPorRol(Rol.VENDEDOR).size());
-        System.out.println("  🟢 Usuario actual: " + (usuarioActual != null ? usuarioActual.getNombre() : "Ninguno"));
     }
     
     // ---------------------- METODOS DE PERSISTENCIA ----------------------
@@ -183,11 +138,6 @@ public class SistemaAutenticacion {
                 
                 // Cargar credenciales reales
                 credenciales.putAll(credencialesCargadas);
-                
-                System.out.println("✅ Usuarios cargados desde archivo JSON: " + usuarios.size());
-                System.out.println("🔐 Credenciales cargadas: " + credenciales.size());
-            } else {
-                System.out.println("📁 No existe archivo de usuarios. Sistema iniciado con usuarios vacíos.");
             }
         } catch (Exception e) {
             System.out.println("⚠️ Error al cargar usuarios: " + e.getMessage());

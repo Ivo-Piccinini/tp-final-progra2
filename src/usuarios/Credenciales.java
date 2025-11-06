@@ -39,15 +39,6 @@ public class Credenciales {
         }
     }
     
-    public void cambiarPassword(String passwordActual, String passwordNueva) {
-        if (verificarPassword(passwordActual)) {
-            this.password = passwordNueva;
-            System.out.println("✅ Contraseña cambiada exitosamente.");
-        } else {
-            throw new IllegalArgumentException("❌ La contraseña actual es incorrecta.");
-        }
-    }
-    
     // ---------------------- MÉTODOS SOBREESCRITOS ----------------------
     @Override
     public boolean equals(Object o) {
