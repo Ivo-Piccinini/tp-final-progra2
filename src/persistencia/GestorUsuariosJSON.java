@@ -17,6 +17,7 @@ import java.io.IOException;
 import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 public class GestorUsuariosJSON {
@@ -38,9 +39,12 @@ public class GestorUsuariosJSON {
             jsonObject.put("contadorUsuarios", Usuario.getContador());
             
             OperacionesLectoEscritura.grabar(nombreArchivo, jsonObject);
-            System.out.println("✅ Usuarios guardados exitosamente en: " + nombreArchivo);
+        } catch (IOException e) {
+            throw new ErrorPersistenciaException("Error de E/S al guardar usuarios en el archivo: " + nombreArchivo + ". Detalle: " + e.getMessage(), nombreArchivo, e);
+        } catch (JSONException e) {
+            throw new ErrorPersistenciaException("Error al serializar usuarios a JSON. Detalle: " + e.getMessage(), nombreArchivo, e);
         } catch (Exception e) {
-            throw new ErrorPersistenciaException("Error al guardar usuarios en el archivo: " + nombreArchivo, nombreArchivo, e);
+            throw new ErrorPersistenciaException("Error inesperado al guardar usuarios en el archivo: " + nombreArchivo + ". Detalle: " + e.getMessage(), nombreArchivo, e);
         }
     }
 
@@ -139,13 +143,13 @@ public class GestorUsuariosJSON {
     private JSONObject serializarUsuario(Usuario usuario, SistemaAutenticacion sistemaAutenticacion) throws JSONException {
         JSONObject usuarioJson = new JSONObject();
         usuarioJson.put("id", usuario.getId());
-        usuarioJson.put("nombre", usuario.getNombre());
-        usuarioJson.put("apellido", usuario.getApellido());
-        usuarioJson.put("email", usuario.getEmail());
-        usuarioJson.put("rol", usuario.getRol().toString());
+        usuarioJson.put("nombre", usuario.getNombre() != null ? usuario.getNombre() : "");
+        usuarioJson.put("apellido", usuario.getApellido() != null ? usuario.getApellido() : "");
+        usuarioJson.put("email", usuario.getEmail() != null ? usuario.getEmail() : "");
+        usuarioJson.put("rol", usuario.getRol() != null ? usuario.getRol().toString() : "");
         usuarioJson.put("estado", usuario.getEstado());
-        usuarioJson.put("dni", usuario.getDni());
-        usuarioJson.put("fechaRegistro", usuario.getFechaRegistro().toString());
+        usuarioJson.put("dni", usuario.getDni() != null ? usuario.getDni() : "");
+        usuarioJson.put("fechaRegistro", usuario.getFechaRegistro() != null ? usuario.getFechaRegistro().toString() : "");
         
         // Obtener y guardar la contraseña
         try {
@@ -178,8 +182,11 @@ public class GestorUsuariosJSON {
             
             // Historial de compras
             JSONArray historialArray = new JSONArray();
-            for (String compra : cliente.getHistorialCompras()) {
-                historialArray.put(compra);
+            List<String> historialCompras = cliente.getHistorialCompras();
+            if (historialCompras != null) {
+                for (String compra : historialCompras) {
+                    historialArray.put(compra);
+                }
             }
             usuarioJson.put("historialCompras", historialArray);
             
@@ -188,7 +195,16 @@ public class GestorUsuariosJSON {
             usuarioJson.put("tipoUsuario", "VENDEDOR");
             usuarioJson.put("salario", vendedor.getSalario());
             usuarioJson.put("comision", vendedor.getComisionPorVenta());
-            usuarioJson.put("ventasRealizadas", vendedor.getHistorialVentas());
+            
+            // Historial de ventas
+            JSONArray ventasArray = new JSONArray();
+            List<String> historialVentas = vendedor.getHistorialVentas();
+            if (historialVentas != null) {
+                for (String venta : historialVentas) {
+                    ventasArray.put(venta);
+                }
+            }
+            usuarioJson.put("ventasRealizadas", ventasArray);
             usuarioJson.put("totalVentas", vendedor.getCantVentas());
         }
         

@@ -238,7 +238,6 @@ public class InterfazUsuario {
                 String password = scanner.nextLine();
                 
                 if (sistema.login(email, password)) {
-                    System.out.println("✅ ¡Bienvenido al sistema!");
                     loginExitoso = true;
                 }
             } catch (Exception e) {
@@ -280,7 +279,6 @@ public class InterfazUsuario {
                 
                 if (usuario != null) {
                     if (sistema.registrarUsuario(usuario, password)) {
-                        System.out.println("✅ Usuario registrado exitosamente.");
                         registroExitoso = true;
                     }
                 }
@@ -525,16 +523,24 @@ public class InterfazUsuario {
         // Mostrar productos disponibles
         sistema.mostrarProductosDisponibles();
         
+        // Verificar si hay productos disponibles antes de permitir comprar
+        if (!sistema.hayProductosDisponibles()) {
+            System.out.println("\n❌ No hay productos disponibles en el stock.");
+            System.out.println("No se puede realizar una compra sin productos disponibles.");
+            pausar();
+            return;
+        }
+        
         System.out.println("\n🛒 Para comprar un producto:");
-        System.out.println("1. Ingrese el ID del producto");
+        System.out.println("1. Ingrese el nombre del producto");
         System.out.println("2. Ingrese la cantidad deseada");
         System.out.println("3. Confirme la compra");
         
         try {
-            System.out.print("\nID del producto (0 para cancelar): ");
-            int productoId = Integer.parseInt(scanner.nextLine());
+            System.out.print("\nNombre del producto (Enter para cancelar): ");
+            String nombreProducto = scanner.nextLine().trim();
             
-            if (productoId == 0) {
+            if (nombreProducto.isEmpty()) {
                 System.out.println("❌ Compra cancelada.");
                 return;
             }
@@ -554,7 +560,7 @@ public class InterfazUsuario {
             
             if (confirmacion.equals("s") || confirmacion.equals("si") || confirmacion.equals("sí")) {
                 try {
-                    boolean exito = sistema.comprarProducto(productoId, cantidad);
+                    boolean exito = sistema.comprarProductoPorNombre(nombreProducto, cantidad);
                     if (exito) {
                         System.out.println("✅ Compra realizada exitosamente.");
                     }
@@ -572,7 +578,7 @@ public class InterfazUsuario {
             }
             
         } catch (NumberFormatException e) {
-            System.out.println("❌ Debe ingresar números válidos.");
+            System.out.println("❌ Debe ingresar un número válido para la cantidad.");
         } catch (Exception e) {
             System.out.println("❌ Error: " + e.getMessage());
         }
@@ -676,6 +682,14 @@ public class InterfazUsuario {
         // Mostrar productos disponibles
         sistema.mostrarProductosDisponibles();
         
+        // Verificar si hay productos disponibles antes de permitir procesar una venta
+        if (!sistema.hayProductosDisponibles()) {
+            System.out.println("\n❌ No hay productos disponibles en el stock.");
+            System.out.println("No se puede procesar una venta sin productos disponibles.");
+            pausar();
+            return;
+        }
+        
         System.out.println("\n📝 Para procesar una venta:");
         System.out.println("1. Seleccione el producto por ID");
         System.out.println("2. Ingrese la cantidad");
@@ -711,9 +725,8 @@ public class InterfazUsuario {
                     } else {
                         System.out.println("❌ Error al procesar la venta.");
                     }
-                } else {
-                    System.out.println("❌ Error al agregar el producto a la venta.");
                 }
+                // El mensaje de error específico ya se muestra en agregarProductoAVenta()
             }
         } catch (NumberFormatException e) {
             System.out.println("❌ Debe ingresar números válidos.");
@@ -779,9 +792,7 @@ public class InterfazUsuario {
             // Agregar producto al stock
             boolean exito = sistema.agregarProductoAlStock(nombre, descripcion, categoria, precio, marca, modelo, especificaciones, cantidad);
             
-            if (exito) {
-                System.out.println("\n✅ ¡Producto agregado exitosamente al stock!");
-            } else {
+            if (!exito) {
                 System.out.println("\n❌ Error al agregar el producto.");
             }
             
@@ -909,10 +920,7 @@ public class InterfazUsuario {
             String confirmacion = scanner.nextLine().toLowerCase();
             
             if (confirmacion.equals("s") || confirmacion.equals("si") || confirmacion.equals("sí")) {
-                boolean exito = sistema.darBajaUsuario(email);
-                if (exito) {
-                    System.out.println("✅ Usuario dado de baja exitosamente.");
-                }
+                sistema.darBajaUsuario(email);
             } else {
                 System.out.println("❌ Operación cancelada.");
             }
@@ -947,11 +955,7 @@ public class InterfazUsuario {
                 return;
             }
             
-            boolean exito = sistema.reactivarUsuario(email);
-            if (exito) {
-                System.out.println("✅ Usuario reactivado exitosamente.");
-            }
-            
+            sistema.reactivarUsuario(email);
         } catch (UsuarioNoEncontradoException e) {
             System.out.println("❌ Error: " + e.getMessage());
         } catch (Exception e) {
@@ -1035,7 +1039,22 @@ public class InterfazUsuario {
                 sistema.modificarVendedor(email, nuevoSalario);
             }
             
-            System.out.println("\n✅ Usuario modificado exitosamente.");
+            // Guardar todos los cambios al final
+            try {
+                sistema.guardarUsuarios();
+            } catch (excepciones.ErrorPersistenciaException e) {
+                System.out.println("❌ Error al guardar usuarios: " + e.getMessage());
+                if (e.getCause() != null) {
+                    System.out.println("   Causa: " + e.getCause().getMessage());
+                }
+                // No re-lanzar la excepción, solo mostrar el error y continuar
+                // Los cambios ya están en memoria, solo falló el guardado en disco
+                return;
+            }
+            
+            // Obtener el usuario actualizado para mostrar el nombre en el mensaje final
+            Usuario usuarioActualizado = sistema.buscarUsuarioPorEmail(email);
+            System.out.println("\n✅ Usuario modificado exitosamente: " + usuarioActualizado.getNombre() + " " + usuarioActualizado.getApellido());
             
         } catch (UsuarioNoEncontradoException e) {
             System.out.println("❌ Error: " + e.getMessage());

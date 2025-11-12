@@ -29,6 +29,8 @@ public class StockJSON {
             jsonObject.put("stockTotal", stock.getStockTotal());
             jsonObject.put("cantidadProductos", stock.getCantidadProductos());
             jsonObject.put("valorTotalInventario", stock.getValorTotalInventario());
+            // Guardar el contador actual para mantener la secuencia de IDs
+            jsonObject.put("contadorProductos", Producto.getContador());
             
             // Serializar productos
             JSONArray productosArray = new JSONArray();
@@ -49,7 +51,6 @@ public class StockJSON {
             jsonObject.put("productos", productosArray);
             
             OperacionesLectoEscritura.grabar(nombreArchivo, jsonObject);
-            System.out.println("✅ Stock guardado exitosamente en: " + nombreArchivo);
             
         } catch (Exception e) {
             System.out.println("❌ Error al guardar stock: " + e.getMessage());
@@ -61,49 +62,95 @@ public class StockJSON {
      */
     public Stock cargarStock(String nombreArchivo) {
         Stock stock = new Stock();
+        FileReader fileReader = null;
         
         try {
+            // Crear directorio si no existe
+            File directorio = new File("data");
+            if (!directorio.exists()) {
+                directorio.mkdirs();
+            }
+            
             // Verificar si el archivo existe y no está vacío
             File archivo = new File(nombreArchivo);
             if (!archivo.exists() || archivo.length() == 0) {
                 return stock;
             }
             
-            FileReader fileReader = new FileReader(nombreArchivo);
+            fileReader = new FileReader(nombreArchivo);
             org.json.JSONTokener tokener = new org.json.JSONTokener(fileReader);
             JSONObject jsonObject = new JSONObject(tokener);
             
-            JSONArray productosArray = jsonObject.getJSONArray("productos");
+            if (!jsonObject.has("productos")) {
+                return stock;
+            }
             
+            // Primero, encontrar el ID máximo para restaurar el contador correctamente
+            JSONArray productosArray = jsonObject.getJSONArray("productos");
+            int maxId = -1;
+            
+            // Buscar el ID máximo en el JSON antes de crear productos
             for (int i = 0; i < productosArray.length(); i++) {
-                JSONObject productoJson = productosArray.getJSONObject(i);
-                Producto producto = deserializarProducto(productoJson);
-                int cantidad = productoJson.getInt("cantidad");
-                
-                if (producto != null) {
-                    stock.agregarProducto(producto, cantidad);
-                    System.out.println("✅ Producto cargado: " + producto.getNombre() + " (ID: " + producto.getId() + ", Cantidad: " + cantidad + ")");
-                } else {
-                    System.out.println("⚠️ No se pudo cargar un producto del archivo");
+                try {
+                    JSONObject productoJson = productosArray.getJSONObject(i);
+                    int idProducto = productoJson.getInt("id");
+                    if (idProducto > maxId) {
+                        maxId = idProducto;
+                    }
+                } catch (Exception e) {
+                    // Ignorar errores al leer IDs
+                }
+            }
+            
+            // Restaurar el contador ANTES de cargar productos
+            if (jsonObject.has("contadorProductos")) {
+                int contadorGuardado = jsonObject.getInt("contadorProductos");
+                Producto.setContador(contadorGuardado);
+            } else if (maxId >= 0) {
+                // Si no hay contador guardado, usar el máximo ID + 1
+                Producto.setContador(maxId + 1);
+            }
+            
+            // Ahora cargar los productos
+            for (int i = 0; i < productosArray.length(); i++) {
+                try {
+                    JSONObject productoJson = productosArray.getJSONObject(i);
+                    int idProducto = productoJson.getInt("id");
+                    Producto producto = deserializarProducto(productoJson);
+                    int cantidad = productoJson.getInt("cantidad");
+                    
+                    if (producto != null) {
+                        // Verificar que el ID se haya establecido correctamente
+                        if (producto.getId() != idProducto) {
+                            producto.setId(idProducto); // Forzar el ID correcto
+                        }
+                        
+                        // Agregar producto al stock
+                        stock.agregarProducto(producto, cantidad);
+                    } else {
+                        System.out.println("⚠️ Error: producto deserializado es null para índice " + i);
+                    }
+                } catch (Exception e) {
+                    System.out.println("⚠️ Error al cargar producto en índice " + i + ": " + e.getMessage());
+                    e.printStackTrace();
                 }
             }
             
         } catch (FileNotFoundException e) {
-            System.out.println("📁 Archivo de stock no encontrado: " + nombreArchivo);
-            System.out.println("📦 Creando stock vacío.");
+            // Archivo no encontrado, continuar con stock vacío
         } catch (JSONException e) {
-            System.out.println("❌ Error de formato JSON en archivo: " + nombreArchivo);
-            System.out.println("📁 El archivo puede estar corrupto. Creando stock vacío.");
-            // Eliminar archivo corrupto
-            try {
-                new File(nombreArchivo).delete();
-                System.out.println("🗑️ Archivo corrupto eliminado.");
-            } catch (Exception deleteError) {
-                System.out.println("⚠️ No se pudo eliminar el archivo corrupto.");
-            }
+            // Error de formato JSON, continuar con stock vacío
         } catch (Exception e) {
-            System.out.println("❌ Error al cargar stock: " + e.getMessage());
-            System.out.println("📁 Creando stock vacío.");
+            // Error al cargar, continuar con stock vacío
+        } finally {
+            // Cerrar el FileReader si está abierto
+            if (fileReader != null) {
+                try {
+                    fileReader.close();
+                } catch (Exception e) {
+                    // Error al cerrar, ignorar
+                }
+            }
         }
         
         return stock;
@@ -138,22 +185,54 @@ public class StockJSON {
             int id = productoJson.getInt("id");
             String nombre = productoJson.getString("nombre");
             String descripcion = productoJson.getString("descripcion");
-            CategoriaProducto categoria = CategoriaProducto.valueOf(productoJson.getString("categoria"));
+            CategoriaProducto categoria = parsearCategoria(productoJson.getString("categoria"));
             double precio = productoJson.getDouble("precio");
             String marca = productoJson.getString("marca");
             String modelo = productoJson.getString("modelo");
             String especificaciones = productoJson.getString("especificaciones");
             boolean activo = productoJson.getBoolean("activo");
             
-            Producto producto = new Producto(nombre, descripcion, categoria, precio, marca, modelo, especificaciones);
-            producto.setId(id); // Restaurar el ID original
+            // Crear producto usando el constructor vacío para evitar que se incremente el contador
+            Producto producto = new Producto();
+            producto.setId(id); // Establecer el ID primero (esto actualiza el contador si es necesario)
+            producto.setNombre(nombre);
+            producto.setDescripcion(descripcion);
+            producto.setCategoria(categoria);
+            producto.setPrecio(precio);
+            producto.setMarca(marca);
+            producto.setModelo(modelo);
+            producto.setEspecificaciones(especificaciones);
             producto.setActivo(activo);
             
             return producto;
             
         } catch (Exception e) {
             System.out.println("⚠️ Error al deserializar producto: " + e.getMessage());
+            e.printStackTrace();
             return null;
+        }
+    }
+    
+    /**
+     * Parsea una categoría desde un string, buscando por nombre del enum o por el campo nombre
+     */
+    private CategoriaProducto parsearCategoria(String categoriaStr) {
+        if (categoriaStr == null || categoriaStr.isEmpty()) {
+            return CategoriaProducto.ACCESORIO; // Valor por defecto
+        }
+        
+        // Primero intentar con valueOf (nombre del enum en mayúsculas)
+        try {
+            return CategoriaProducto.valueOf(categoriaStr.toUpperCase());
+        } catch (IllegalArgumentException e) {
+            // Si falla, buscar por el campo nombre
+            for (CategoriaProducto categoria : CategoriaProducto.values()) {
+                if (categoria.getNombre().equalsIgnoreCase(categoriaStr)) {
+                    return categoria;
+                }
+            }
+            // Si no se encuentra, devolver ACCESORIO por defecto
+            return CategoriaProducto.ACCESORIO;
         }
     }
 }

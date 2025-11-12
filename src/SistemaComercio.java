@@ -120,19 +120,22 @@ public class SistemaComercio {
     }
     
     public void mostrarProductosDisponibles() {
-        System.out.println("  📦 Total productos: " + stock.getCantidadProductos());
-        System.out.println("  📊 Stock total: " + stock.getStockTotal() + " unidades");
-        System.out.println("  🛍️ Productos disponibles: " + stock.getCantidadProductosDisponibles());
-        
         stock.mostrarProductosDisponibles();
+    }
+    
+    /**
+     * Verifica si hay productos disponibles en el stock
+     */
+    public boolean hayProductosDisponibles() {
+        return stock.getCantidadProductosDisponibles() > 0;
     }
     
     // ---------------------- METODOS DE COMPRA PARA CLIENTES ----------------------
     
     /**
-     * Permite a un cliente comprar productos directamente
+     * Permite a un cliente comprar productos directamente por nombre
      */
-    public boolean comprarProducto(int productoId, int cantidad) throws ProductoNoEncontradoException, StockInsuficienteException, SaldoInsuficienteException {
+    public boolean comprarProductoPorNombre(String nombreProducto, int cantidad) throws ProductoNoEncontradoException, StockInsuficienteException, SaldoInsuficienteException {
         if (!estaLogueado()) {
             throw new IllegalStateException("Debe estar logueado para realizar una compra.");
         }
@@ -143,11 +146,13 @@ public class SistemaComercio {
         }
         
         Cliente cliente = (Cliente) usuario;
-        Producto producto = stock.obtenerProducto(productoId);
+        Producto producto = stock.buscarProductoPorNombre(nombreProducto);
         
         if (producto == null) {
-            throw new ProductoNoEncontradoException("Producto no encontrado con ID: " + productoId, productoId);
+            throw new ProductoNoEncontradoException("Producto no encontrado: " + nombreProducto, -1);
         }
+        
+        int productoId = producto.getId();
         
         if (!producto.isActivo()) {
             throw new IllegalStateException("El producto no está disponible.");
@@ -473,7 +478,19 @@ public class SistemaComercio {
             return false;
         }
         
-        return venta.agregarProducto(producto, cantidad, stock);
+        try {
+            boolean resultado = venta.agregarProducto(producto, cantidad, stock);
+            if (resultado) {
+                System.out.println("✅ Producto agregado a la venta: " + producto.getNombre() + " x" + cantidad);
+            }
+            return resultado;
+        } catch (StockInsuficienteException e) {
+            System.out.println("❌ Error: " + e.getMessage());
+            return false;
+        } catch (IllegalArgumentException e) {
+            System.out.println("❌ Error: " + e.getMessage());
+            return false;
+        }
     }
     
     /**
@@ -633,5 +650,12 @@ public class SistemaComercio {
             System.out.println("❌ Error: " + e.getMessage());
             return false;
         }
+    }
+    
+    /**
+     * Guarda los usuarios en el archivo JSON
+     */
+    public void guardarUsuarios() throws excepciones.ErrorPersistenciaException {
+        sistemaAutenticacion.guardarUsuarios();
     }
 }

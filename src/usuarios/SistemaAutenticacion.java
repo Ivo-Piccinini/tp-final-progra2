@@ -74,7 +74,14 @@ public class SistemaAutenticacion {
         }
         
         if (creds.verificarPassword(password)) {
-            usuarioActual = usuarios.get(email);
+            Usuario usuario = usuarios.get(email);
+            
+            // Verificar que el usuario esté activo (estado = 1)
+            if (usuario.getEstado() == 0) {
+                throw new CredencialesInvalidasException("No se puede iniciar sesión. El usuario está inactivo. Contacte al administrador.");
+            }
+            
+            usuarioActual = usuario;
             usuarioActual.actualizarUltimoAcceso();
             System.out.println("✅ Login exitoso. Bienvenido, " + usuarioActual.getNombre() + "!");
             return true;
@@ -200,8 +207,7 @@ public class SistemaAutenticacion {
             usuario.setDni(nuevoDni.trim());
         }
         
-        guardarUsuariosEnArchivo();
-        System.out.println("✅ Usuario modificado exitosamente: " + usuario.getNombre() + " " + usuario.getApellido());
+        // No guardar aquí, se guardará al final de todas las modificaciones
         return true;
     }
     
@@ -226,8 +232,7 @@ public class SistemaAutenticacion {
             cliente.setTelefono(nuevoTelefono.trim());
         }
         
-        guardarUsuariosEnArchivo();
-        System.out.println("✅ Cliente modificado exitosamente: " + cliente.getNombre() + " " + cliente.getApellido());
+        // No guardar aquí, se guardará al final de todas las modificaciones
         return true;
     }
     
@@ -248,8 +253,7 @@ public class SistemaAutenticacion {
             vendedor.setSalario(nuevoSalario);
         }
         
-        guardarUsuariosEnArchivo();
-        System.out.println("✅ Vendedor modificado exitosamente: " + vendedor.getNombre() + " " + vendedor.getApellido());
+        // No guardar aquí, se guardará al final de todas las modificaciones
         return true;
     }
     
@@ -264,7 +268,6 @@ public class SistemaAutenticacion {
             File directorio = new File("data");
             if (!directorio.exists()) {
                 directorio.mkdirs();
-                System.out.println("📁 Directorio de datos creado: data");
             }
             
             // Verificar si existe el archivo

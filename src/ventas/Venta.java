@@ -93,7 +93,7 @@ public class Venta {
     }
     
     // ---------------------- MÉTODOS DE GESTIÓN ----------------------
-    public boolean agregarProducto(Producto producto, int cantidad, Stock stock) {
+    public boolean agregarProducto(Producto producto, int cantidad, Stock stock) throws StockInsuficienteException {
         if (producto == null) {
             throw new IllegalArgumentException("El producto no puede ser null.");
         }
@@ -103,14 +103,32 @@ public class Venta {
         if (!producto.isActivo()) {
             throw new IllegalArgumentException("El producto no está activo.");
         }
-        if (!stock.hayStock(producto.getId(), cantidad)) {
-            return false; // No hay suficiente stock
-        }
         
         // Verificar si el producto ya está en la venta
+        int cantidadTotalNecesaria = cantidad;
         for (DetalleVenta detalle : detalles) {
             if (detalle.getProducto().getId() == producto.getId()) {
-                detalle.setCantidad(detalle.getCantidad() + cantidad);
+                // Si el producto ya está en la venta, calcular la cantidad total necesaria
+                cantidadTotalNecesaria = detalle.getCantidad() + cantidad;
+                break;
+            }
+        }
+        
+        // Verificar stock disponible para la cantidad total necesaria
+        if (!stock.hayStock(producto.getId(), cantidadTotalNecesaria)) {
+            int stockDisponible = stock.obtenerCantidad(producto.getId());
+            throw new StockInsuficienteException(
+                "No hay suficiente stock del producto: " + producto.getNombre() + 
+                ". Disponible: " + stockDisponible + ", Requerido: " + cantidadTotalNecesaria,
+                stockDisponible,
+                cantidadTotalNecesaria
+            );
+        }
+        
+        // Verificar si el producto ya está en la venta para actualizar cantidad
+        for (DetalleVenta detalle : detalles) {
+            if (detalle.getProducto().getId() == producto.getId()) {
+                detalle.setCantidad(cantidadTotalNecesaria);
                 actualizarTotales();
                 return true;
             }
@@ -136,13 +154,23 @@ public class Venta {
         return false;
     }
     
-    public boolean actualizarCantidad(int productoId, int nuevaCantidad) {
+    public boolean actualizarCantidad(int productoId, int nuevaCantidad, Stock stock) throws StockInsuficienteException {
         if (nuevaCantidad <= 0) {
             return removerProducto(productoId);
         }
         
         for (DetalleVenta detalle : detalles) {
             if (detalle.getProducto().getId() == productoId) {
+                // Verificar stock disponible antes de actualizar
+                if (!stock.hayStock(productoId, nuevaCantidad)) {
+                    int stockDisponible = stock.obtenerCantidad(productoId);
+                    throw new StockInsuficienteException(
+                        "No hay suficiente stock del producto: " + detalle.getProducto().getNombre() + 
+                        ". Disponible: " + stockDisponible + ", Requerido: " + nuevaCantidad,
+                        stockDisponible,
+                        nuevaCantidad
+                    );
+                }
                 detalle.setCantidad(nuevaCantidad);
                 actualizarTotales();
                 return true;
@@ -219,14 +247,6 @@ public class Venta {
         
         this.estado = "COMPLETADA";
         return true;
-    }
-    
-    public void aplicarDescuento(double porcentajeDescuento) {
-        if (porcentajeDescuento < 0 || porcentajeDescuento > 100) {
-            throw new IllegalArgumentException("El porcentaje de descuento debe estar entre 0 y 100.");
-        }
-        this.descuento = subtotal * (porcentajeDescuento / 100.0);
-        this.total = subtotal - descuento;
     }
     
     private void actualizarTotales() {

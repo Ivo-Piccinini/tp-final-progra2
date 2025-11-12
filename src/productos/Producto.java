@@ -47,7 +47,18 @@ public class Producto {
     public int getId() {
         return id;
     }
-    public void setId(int id) {}
+    public void setId(int id) {
+        this.id = id;
+        // Actualizar el contador si el ID es mayor o igual al contador actual
+        // Esto asegura que el contador siempre esté por encima del ID más alto
+        if (id >= contador) {
+            contador = id + 1;
+        }
+    }
+    
+    public static void setContador(int nuevoContador) {
+        contador = nuevoContador;
+    }
     public static int getContador() {
         return contador;
     }

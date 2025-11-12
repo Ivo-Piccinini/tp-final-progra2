@@ -45,6 +45,8 @@ public class Cliente extends Usuario {
         this.saldo = saldo;
         this.direccion = direccion;
         this.telefono = telefono;
+        this.historialCompras = new ArrayList<>();
+        this.preferencias = new ArrayList<>();
     }
 
     // ---------------------- GETTERS Y SETTERS ----------------------
@@ -85,6 +87,9 @@ public class Cliente extends Usuario {
         this.telefono = telefono;
     }
     public List<String> getHistorialCompras() {
+        if (historialCompras == null) {
+            historialCompras = new ArrayList<>();
+        }
         return new ArrayList<>(historialCompras);
     }
     public List<String> getPreferencias() {

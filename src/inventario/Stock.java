@@ -95,6 +95,27 @@ public class Stock {
         return productos.get(productoId);
     }
     
+    /**
+     * Busca un producto por nombre (búsqueda case-insensitive)
+     * Si hay múltiples productos con el mismo nombre, retorna el primero disponible
+     */
+    public Producto buscarProductoPorNombre(String nombre) {
+        if (nombre == null || nombre.trim().isEmpty()) {
+            return null;
+        }
+        
+        String nombreBusqueda = nombre.trim().toLowerCase();
+        List<Producto> disponibles = obtenerProductosDisponibles();
+        
+        for (Producto producto : disponibles) {
+            if (producto.getNombre().toLowerCase().equals(nombreBusqueda)) {
+                return producto;
+            }
+        }
+        
+        return null;
+    }
+    
     // ---------------------- METODOS DE CONSULTA ----------------------
     public List<Producto> obtenerProductosDisponibles() {
         List<Producto> disponibles = new ArrayList<>();
