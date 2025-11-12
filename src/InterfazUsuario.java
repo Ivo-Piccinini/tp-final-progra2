@@ -5,6 +5,7 @@ import usuarios.vendedores.Vendedor;
 import excepciones.ProductoNoEncontradoException;
 import excepciones.StockInsuficienteException;
 import excepciones.SaldoInsuficienteException;
+import excepciones.UsuarioNoEncontradoException;
 
 import java.util.Scanner;
 
@@ -104,7 +105,8 @@ public class InterfazUsuario {
         System.out.println("3. ➕ Agregar Producto al Stock");
         System.out.println("4. 💰 Vender Productos");
         System.out.println("5. 📊 Ver Mis Ventas");
-        System.out.println("6. 🚪 Cerrar Sesión");
+        System.out.println("6. 👥 Gestionar Usuarios");
+        System.out.println("7. 🚪 Cerrar Sesión");
         System.out.println("═══════════════════════════════════");
     }
     
@@ -209,6 +211,9 @@ public class InterfazUsuario {
                 pausar();
                 break;
             case 6:
+                gestionarUsuarios();
+                break;
+            case 7:
                 sistema.logout();
                 break;
             default:
@@ -780,6 +785,260 @@ public class InterfazUsuario {
                 System.out.println("\n❌ Error al agregar el producto.");
             }
             
+        } catch (Exception e) {
+            System.out.println("❌ Error: " + e.getMessage());
+        }
+        
+        pausar();
+    }
+    
+    // ---------------------- METODOS DE GESTION DE USUARIOS (VENDEDOR) ----------------------
+    
+    /**
+     * Menú principal para gestionar usuarios
+     */
+    private void gestionarUsuarios() {
+        limpiarPantalla();
+        System.out.println("👥 GESTIÓN DE USUARIOS");
+        System.out.println("═══════════════════════════════════");
+        System.out.println("1. 📋 Listar Todos los Usuarios");
+        System.out.println("2. 🔍 Buscar Usuario por Email");
+        System.out.println("3. ❌ Dar de Baja Usuario");
+        System.out.println("4. ✅ Reactivar Usuario");
+        System.out.println("5. ✏️ Modificar Usuario");
+        System.out.println("0. 🔙 Volver al Menú Principal");
+        System.out.println("═══════════════════════════════════");
+        
+        try {
+            System.out.print("Seleccione una opción: ");
+            int opcion = Integer.parseInt(scanner.nextLine());
+            
+            switch (opcion) {
+                case 1:
+                    listarUsuarios();
+                    break;
+                case 2:
+                    buscarUsuario();
+                    break;
+                case 3:
+                    darBajaUsuario();
+                    break;
+                case 4:
+                    reactivarUsuario();
+                    break;
+                case 5:
+                    modificarUsuario();
+                    break;
+                case 0:
+                    return;
+                default:
+                    System.out.println("❌ Opción no válida.");
+                    pausar();
+            }
+        } catch (NumberFormatException e) {
+            System.out.println("❌ Debe ingresar un número válido.");
+            pausar();
+        } catch (Exception e) {
+            System.out.println("❌ Error: " + e.getMessage());
+            pausar();
+        }
+    }
+    
+    /**
+     * Lista todos los usuarios del sistema
+     */
+    private void listarUsuarios() {
+        limpiarPantalla();
+        sistema.listarTodosLosUsuarios();
+        pausar();
+    }
+    
+    /**
+     * Busca un usuario por email y muestra su información
+     */
+    private void buscarUsuario() {
+        limpiarPantalla();
+        System.out.println("🔍 BUSCAR USUARIO");
+        System.out.println("═══════════════════════════════════");
+        
+        try {
+            System.out.print("Ingrese el email del usuario: ");
+            String email = scanner.nextLine().trim();
+            
+            if (email.isEmpty()) {
+                System.out.println("❌ El email no puede estar vacío.");
+                pausar();
+                return;
+            }
+            
+            Usuario usuario = sistema.buscarUsuarioPorEmail(email);
+            System.out.println("\n" + usuario.toString());
+            
+        } catch (UsuarioNoEncontradoException e) {
+            System.out.println("❌ Error: " + e.getMessage());
+        } catch (Exception e) {
+            System.out.println("❌ Error: " + e.getMessage());
+        }
+        
+        pausar();
+    }
+    
+    /**
+     * Da de baja lógica a un usuario
+     */
+    private void darBajaUsuario() {
+        limpiarPantalla();
+        System.out.println("❌ DAR DE BAJA USUARIO");
+        System.out.println("═══════════════════════════════════");
+        
+        try {
+            // Mostrar lista de usuarios activos
+            sistema.listarTodosLosUsuarios();
+            
+            System.out.print("\nIngrese el email del usuario a dar de baja: ");
+            String email = scanner.nextLine().trim();
+            
+            if (email.isEmpty()) {
+                System.out.println("❌ El email no puede estar vacío.");
+                pausar();
+                return;
+            }
+            
+            // Confirmar acción
+            System.out.print("¿Está seguro de dar de baja a este usuario? (s/n): ");
+            String confirmacion = scanner.nextLine().toLowerCase();
+            
+            if (confirmacion.equals("s") || confirmacion.equals("si") || confirmacion.equals("sí")) {
+                boolean exito = sistema.darBajaUsuario(email);
+                if (exito) {
+                    System.out.println("✅ Usuario dado de baja exitosamente.");
+                }
+            } else {
+                System.out.println("❌ Operación cancelada.");
+            }
+            
+        } catch (UsuarioNoEncontradoException e) {
+            System.out.println("❌ Error: " + e.getMessage());
+        } catch (Exception e) {
+            System.out.println("❌ Error: " + e.getMessage());
+        }
+        
+        pausar();
+    }
+    
+    /**
+     * Reactiva un usuario
+     */
+    private void reactivarUsuario() {
+        limpiarPantalla();
+        System.out.println("✅ REACTIVAR USUARIO");
+        System.out.println("═══════════════════════════════════");
+        
+        try {
+            // Mostrar lista de usuarios inactivos
+            sistema.listarTodosLosUsuarios();
+            
+            System.out.print("\nIngrese el email del usuario a reactivar: ");
+            String email = scanner.nextLine().trim();
+            
+            if (email.isEmpty()) {
+                System.out.println("❌ El email no puede estar vacío.");
+                pausar();
+                return;
+            }
+            
+            boolean exito = sistema.reactivarUsuario(email);
+            if (exito) {
+                System.out.println("✅ Usuario reactivado exitosamente.");
+            }
+            
+        } catch (UsuarioNoEncontradoException e) {
+            System.out.println("❌ Error: " + e.getMessage());
+        } catch (Exception e) {
+            System.out.println("❌ Error: " + e.getMessage());
+        }
+        
+        pausar();
+    }
+    
+    /**
+     * Modifica los datos de un usuario
+     */
+    private void modificarUsuario() {
+        limpiarPantalla();
+        System.out.println("✏️ MODIFICAR USUARIO");
+        System.out.println("═══════════════════════════════════");
+        
+        try {
+            // Mostrar lista de usuarios
+            sistema.listarTodosLosUsuarios();
+            
+            System.out.print("\nIngrese el email del usuario a modificar: ");
+            String email = scanner.nextLine().trim();
+            
+            if (email.isEmpty()) {
+                System.out.println("❌ El email no puede estar vacío.");
+                pausar();
+                return;
+            }
+            
+            // Buscar usuario para verificar su tipo
+            Usuario usuario = sistema.buscarUsuarioPorEmail(email);
+            
+            System.out.println("\n📝 Datos actuales del usuario:");
+            System.out.println(usuario.toString());
+            System.out.println("\n═══════════════════════════════════");
+            System.out.println("Ingrese los nuevos datos (presione Enter para mantener el valor actual):");
+            
+            // Modificar datos básicos
+            System.out.print("Nuevo nombre [" + usuario.getNombre() + "]: ");
+            String nuevoNombre = scanner.nextLine().trim();
+            if (nuevoNombre.isEmpty()) nuevoNombre = null;
+            
+            System.out.print("Nuevo apellido [" + usuario.getApellido() + "]: ");
+            String nuevoApellido = scanner.nextLine().trim();
+            if (nuevoApellido.isEmpty()) nuevoApellido = null;
+            
+            System.out.print("Nuevo DNI [" + usuario.getDni() + "]: ");
+            String nuevoDni = scanner.nextLine().trim();
+            if (nuevoDni.isEmpty()) nuevoDni = null;
+            
+            // Modificar datos básicos
+            sistema.modificarUsuario(email, nuevoNombre, nuevoApellido, nuevoDni);
+            
+            // Modificar datos específicos según el tipo de usuario
+            if (usuario instanceof Cliente) {
+                Cliente cliente = (Cliente) usuario;
+                System.out.print("Nueva dirección [" + (cliente.getDireccion() != null ? cliente.getDireccion() : "N/A") + "]: ");
+                String nuevaDireccion = scanner.nextLine().trim();
+                if (nuevaDireccion.isEmpty()) nuevaDireccion = null;
+                
+                System.out.print("Nuevo teléfono [" + (cliente.getTelefono() != null ? cliente.getTelefono() : "N/A") + "]: ");
+                String nuevoTelefono = scanner.nextLine().trim();
+                if (nuevoTelefono.isEmpty()) nuevoTelefono = null;
+                
+                sistema.modificarCliente(email, nuevaDireccion, nuevoTelefono);
+                
+            } else if (usuario instanceof Vendedor) {
+                Vendedor vendedor = (Vendedor) usuario;
+                System.out.print("Nuevo salario [" + String.format("%.2f", vendedor.getSalario()) + "]: ");
+                String salarioStr = scanner.nextLine().trim();
+                Double nuevoSalario = null;
+                if (!salarioStr.isEmpty()) {
+                    try {
+                        nuevoSalario = Double.parseDouble(salarioStr);
+                    } catch (NumberFormatException e) {
+                        System.out.println("⚠️ Salario inválido, se mantendrá el valor actual.");
+                    }
+                }
+                
+                sistema.modificarVendedor(email, nuevoSalario);
+            }
+            
+            System.out.println("\n✅ Usuario modificado exitosamente.");
+            
+        } catch (UsuarioNoEncontradoException e) {
+            System.out.println("❌ Error: " + e.getMessage());
         } catch (Exception e) {
             System.out.println("❌ Error: " + e.getMessage());
         }

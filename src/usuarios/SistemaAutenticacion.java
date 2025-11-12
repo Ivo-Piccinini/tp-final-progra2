@@ -7,6 +7,7 @@ import excepciones.UsuarioYaExisteException;
 import excepciones.PasswordInvalidaException;
 import excepciones.CredencialesInvalidasException;
 import excepciones.ErrorPersistenciaException;
+import excepciones.UsuarioNoEncontradoException;
 import java.util.*;
 import java.io.File;
 
@@ -120,6 +121,136 @@ public class SistemaAutenticacion {
      */
     public boolean hayUsuariosRegistrados() {
         return !usuarios.isEmpty() && !credenciales.isEmpty();
+    }
+    
+    /**
+     * Busca un usuario por su email
+     */
+    public Usuario buscarUsuarioPorEmail(String email) throws UsuarioNoEncontradoException {
+        if (email == null || email.trim().isEmpty()) {
+            throw new UsuarioNoEncontradoException("El email no puede ser nulo o vacío.");
+        }
+        
+        Usuario usuario = usuarios.get(email);
+        if (usuario == null) {
+            throw new UsuarioNoEncontradoException("Usuario no encontrado con email: " + email, email);
+        }
+        
+        return usuario;
+    }
+    
+    /**
+     * Busca un usuario por su ID
+     */
+    public Usuario buscarUsuarioPorId(int id) throws UsuarioNoEncontradoException {
+        for (Usuario usuario : usuarios.values()) {
+            if (usuario.getId() == id) {
+                return usuario;
+            }
+        }
+        
+        throw new UsuarioNoEncontradoException("Usuario no encontrado con ID: " + id, id);
+    }
+    
+    /**
+     * Da de baja lógica a un usuario (estado = 0 = Inactivo)
+     * No permite dar de baja al usuario actual
+     */
+    public boolean darBajaUsuario(String email) throws UsuarioNoEncontradoException {
+        Usuario usuario = buscarUsuarioPorEmail(email);
+        
+        // No permitir dar de baja al usuario actual
+        if (usuarioActual != null && usuarioActual.getEmail().equals(email)) {
+            throw new IllegalStateException("No puede dar de baja su propia cuenta.");
+        }
+        
+        usuario.setEstado(0); // 0 = Inactivo
+        guardarUsuariosEnArchivo();
+        System.out.println("✅ Usuario dado de baja exitosamente: " + usuario.getNombre() + " " + usuario.getApellido());
+        return true;
+    }
+    
+    /**
+     * Reactiva un usuario (estado = 1 = Activo)
+     */
+    public boolean reactivarUsuario(String email) throws UsuarioNoEncontradoException {
+        Usuario usuario = buscarUsuarioPorEmail(email);
+        usuario.setEstado(1); // 1 = Activo
+        guardarUsuariosEnArchivo();
+        System.out.println("✅ Usuario reactivado exitosamente: " + usuario.getNombre() + " " + usuario.getApellido());
+        return true;
+    }
+    
+    /**
+     * Modifica los datos básicos de un usuario
+     */
+    public boolean modificarUsuario(String email, String nuevoNombre, String nuevoApellido, String nuevoDni) 
+            throws UsuarioNoEncontradoException {
+        Usuario usuario = buscarUsuarioPorEmail(email);
+        
+        if (nuevoNombre != null && !nuevoNombre.trim().isEmpty()) {
+            usuario.setNombre(nuevoNombre.trim());
+        }
+        
+        if (nuevoApellido != null && !nuevoApellido.trim().isEmpty()) {
+            usuario.setApellido(nuevoApellido.trim());
+        }
+        
+        if (nuevoDni != null && !nuevoDni.trim().isEmpty()) {
+            usuario.setDni(nuevoDni.trim());
+        }
+        
+        guardarUsuariosEnArchivo();
+        System.out.println("✅ Usuario modificado exitosamente: " + usuario.getNombre() + " " + usuario.getApellido());
+        return true;
+    }
+    
+    /**
+     * Modifica datos específicos de un Cliente
+     */
+    public boolean modificarCliente(String email, String nuevaDireccion, String nuevoTelefono) 
+            throws UsuarioNoEncontradoException {
+        Usuario usuario = buscarUsuarioPorEmail(email);
+        
+        if (!(usuario instanceof Cliente)) {
+            throw new IllegalArgumentException("El usuario no es un Cliente.");
+        }
+        
+        Cliente cliente = (Cliente) usuario;
+        
+        if (nuevaDireccion != null) {
+            cliente.setDireccion(nuevaDireccion.trim());
+        }
+        
+        if (nuevoTelefono != null) {
+            cliente.setTelefono(nuevoTelefono.trim());
+        }
+        
+        guardarUsuariosEnArchivo();
+        System.out.println("✅ Cliente modificado exitosamente: " + cliente.getNombre() + " " + cliente.getApellido());
+        return true;
+    }
+    
+    /**
+     * Modifica datos específicos de un Vendedor
+     */
+    public boolean modificarVendedor(String email, Double nuevoSalario) 
+            throws UsuarioNoEncontradoException {
+        Usuario usuario = buscarUsuarioPorEmail(email);
+        
+        if (!(usuario instanceof Vendedor)) {
+            throw new IllegalArgumentException("El usuario no es un Vendedor.");
+        }
+        
+        Vendedor vendedor = (Vendedor) usuario;
+        
+        if (nuevoSalario != null && nuevoSalario >= 0) {
+            vendedor.setSalario(nuevoSalario);
+        }
+        
+        guardarUsuariosEnArchivo();
+        System.out.println("✅ Vendedor modificado exitosamente: " + vendedor.getNombre() + " " + vendedor.getApellido());
+        return true;
     }
     
     // ---------------------- METODOS DE PERSISTENCIA ----------------------

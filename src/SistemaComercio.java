@@ -15,6 +15,7 @@ import excepciones.UsuarioYaExisteException;
 import excepciones.PasswordInvalidaException;
 import excepciones.CredencialesInvalidasException;
 import excepciones.ErrorPersistenciaException;
+import excepciones.UsuarioNoEncontradoException;
 import java.time.LocalDateTime;
 import java.util.*;
 import java.util.Scanner;
@@ -546,6 +547,91 @@ public class SistemaComercio {
             for (Venta venta : ventas) {
                 System.out.println(venta.toString());
             }
+        }
+    }
+    
+    // ---------------------- METODOS DE GESTION DE USUARIOS (VENDEDOR) ----------------------
+    
+    /**
+     * Lista todos los usuarios del sistema
+     */
+    public void listarTodosLosUsuarios() {
+        List<Usuario> usuarios = sistemaAutenticacion.listarUsuarios();
+        
+        System.out.println("👥 LISTA DE USUARIOS");
+        System.out.println("═══════════════════════════════════");
+        
+        if (usuarios.isEmpty()) {
+            System.out.println("📭 No hay usuarios registrados.");
+        } else {
+            for (Usuario usuario : usuarios) {
+                System.out.println("ID: " + usuario.getId() + " | " + 
+                                 usuario.getNombre() + " " + usuario.getApellido() + 
+                                 " | Email: " + usuario.getEmail() + 
+                                 " | Rol: " + usuario.getRol() + 
+                                 " | Estado: " + (usuario.getEstado() == 1 ? "Activo" : "Inactivo"));
+            }
+        }
+        System.out.println("═══════════════════════════════════");
+    }
+    
+    /**
+     * Busca un usuario por email
+     */
+    public Usuario buscarUsuarioPorEmail(String email) throws UsuarioNoEncontradoException {
+        return sistemaAutenticacion.buscarUsuarioPorEmail(email);
+    }
+    
+    /**
+     * Da de baja lógica a un usuario (estado = 0)
+     */
+    public boolean darBajaUsuario(String email) throws UsuarioNoEncontradoException {
+        try {
+            return sistemaAutenticacion.darBajaUsuario(email);
+        } catch (IllegalStateException e) {
+            System.out.println("❌ Error: " + e.getMessage());
+            return false;
+        }
+    }
+    
+    /**
+     * Reactiva un usuario (estado = 1)
+     */
+    public boolean reactivarUsuario(String email) throws UsuarioNoEncontradoException {
+        return sistemaAutenticacion.reactivarUsuario(email);
+    }
+    
+    /**
+     * Modifica los datos básicos de un usuario
+     */
+    public boolean modificarUsuario(String email, String nuevoNombre, String nuevoApellido, String nuevoDni) 
+            throws UsuarioNoEncontradoException {
+        return sistemaAutenticacion.modificarUsuario(email, nuevoNombre, nuevoApellido, nuevoDni);
+    }
+    
+    /**
+     * Modifica datos específicos de un Cliente
+     */
+    public boolean modificarCliente(String email, String nuevaDireccion, String nuevoTelefono) 
+            throws UsuarioNoEncontradoException {
+        try {
+            return sistemaAutenticacion.modificarCliente(email, nuevaDireccion, nuevoTelefono);
+        } catch (IllegalArgumentException e) {
+            System.out.println("❌ Error: " + e.getMessage());
+            return false;
+        }
+    }
+    
+    /**
+     * Modifica datos específicos de un Vendedor
+     */
+    public boolean modificarVendedor(String email, Double nuevoSalario) 
+            throws UsuarioNoEncontradoException {
+        try {
+            return sistemaAutenticacion.modificarVendedor(email, nuevoSalario);
+        } catch (IllegalArgumentException e) {
+            System.out.println("❌ Error: " + e.getMessage());
+            return false;
         }
     }
 }
