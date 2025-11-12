@@ -1,6 +1,7 @@
 package productos;
 
 import org.json.JSONObject;
+import entidades.IEntidad;
 
 import java.time.LocalDateTime;
 
@@ -8,7 +9,7 @@ import java.time.LocalDateTime;
  * Clase que representa un producto de tecnología en el sistema.
  * Incluye información básica, especificaciones técnicas y estado del producto.
  */
-public class Producto {
+public class Producto implements IEntidad<Integer> {
     private int id;
     private static int contador = 0;
     private String nombre;
@@ -44,7 +45,8 @@ public class Producto {
     }
     
     // ---------------------- GETTERS Y SETTERS ----------------------
-    public int getId() {
+    @Override
+    public Integer getId() {
         return id;
     }
     public void setId(int id) {
@@ -62,6 +64,7 @@ public class Producto {
     public static int getContador() {
         return contador;
     }
+    @Override
     public String getNombre() {
         return nombre;
     }

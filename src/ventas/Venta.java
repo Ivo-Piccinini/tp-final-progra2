@@ -9,6 +9,7 @@ import descuentos.DescuentoMetodoPago;
 import excepciones.StockInsuficienteException;
 import excepciones.SaldoInsuficienteException;
 import excepciones.ProductoNoEncontradoException;
+import entidades.IEntidad;
 import java.time.LocalDateTime;
 import java.util.*;
 
@@ -16,7 +17,7 @@ import java.util.*;
  * Clase que representa una venta en el sistema.
  * Incluye información del cliente, vendedor, productos y totales.
  */
-public class Venta {
+public class Venta implements IEntidad<Integer> {
     private int id;
     private static int contador = 0;
     private Cliente cliente;
@@ -45,7 +46,8 @@ public class Venta {
     }
 
     // ---------------------- GETTERS Y SETTERS ----------------------
-    public int getId() {
+    @Override
+    public Integer getId() {
         return id;
     }
     public static int getContador() {
@@ -90,6 +92,14 @@ public class Venta {
             total += detalle.getCantidad();
         }
         return total;
+    }
+    
+    /**
+     * Implementación de IEntidad: retorna un nombre descriptivo de la venta
+     */
+    @Override
+    public String getNombre() {
+        return "Venta #" + id + " - " + (cliente != null ? cliente.getNombre() + " " + cliente.getApellido() : "Sin cliente");
     }
     
     // ---------------------- MÉTODOS DE GESTIÓN ----------------------

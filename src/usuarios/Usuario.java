@@ -1,13 +1,14 @@
 package usuarios;
 
 import org.json.JSONObject;
+import entidades.IEntidad;
 
 import java.time.LocalDateTime;
 import java.util.Objects;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-public abstract class Usuario implements Comparable<Usuario> {
+public abstract class Usuario implements Comparable<Usuario>, IEntidad<Integer> {
     private int id;
     private static int contador = 0;
     private String nombre;
@@ -52,7 +53,8 @@ public abstract class Usuario implements Comparable<Usuario> {
     }
 
     // ---------------------- GETTERS Y SETTERS ----------------------
-    public int getId() {
+    @Override
+    public Integer getId() {
         return id;
     }
     public static int getContador() {
@@ -61,6 +63,7 @@ public abstract class Usuario implements Comparable<Usuario> {
     public static void setContador(int nuevoContador) {
         contador = nuevoContador;
     }
+    @Override
     public String getNombre() {
         return nombre;
     }
