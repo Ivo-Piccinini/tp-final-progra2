@@ -2,6 +2,9 @@ import productos.CategoriaProducto;
 import usuarios.Usuario;
 import usuarios.clientes.Cliente;
 import usuarios.vendedores.Vendedor;
+import excepciones.ProductoNoEncontradoException;
+import excepciones.StockInsuficienteException;
+import excepciones.SaldoInsuficienteException;
 
 import java.util.Scanner;
 
@@ -545,9 +548,19 @@ public class InterfazUsuario {
             String confirmacion = scanner.nextLine().toLowerCase();
             
             if (confirmacion.equals("s") || confirmacion.equals("si") || confirmacion.equals("sí")) {
-                boolean exito = sistema.comprarProducto(productoId, cantidad);
-                if (!exito) {
-                    System.out.println("❌ No se pudo completar la compra.");
+                try {
+                    boolean exito = sistema.comprarProducto(productoId, cantidad);
+                    if (exito) {
+                        System.out.println("✅ Compra realizada exitosamente.");
+                    }
+                } catch (ProductoNoEncontradoException e) {
+                    System.out.println("❌ Error: " + e.getMessage());
+                } catch (StockInsuficienteException e) {
+                    System.out.println("❌ Error: " + e.getMessage());
+                } catch (SaldoInsuficienteException e) {
+                    System.out.println("❌ Error: " + e.getMessage());
+                } catch (IllegalStateException e) {
+                    System.out.println("❌ Error: " + e.getMessage());
                 }
             } else {
                 System.out.println("❌ Compra cancelada.");

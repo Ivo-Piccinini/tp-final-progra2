@@ -10,6 +10,7 @@ import usuarios.Usuario;
 import usuarios.clientes.Cliente;
 import usuarios.vendedores.Vendedor;
 import usuarios.clientes.MetodoPago;
+import excepciones.ErrorPersistenciaException;
 
 import java.io.FileReader;
 import java.io.IOException;
@@ -26,7 +27,7 @@ public class GestorUsuariosJSON {
     /**
      * Guarda todos los usuarios del sistema en un archivo JSON
      */
-    public void guardarUsuarios(SistemaAutenticacion sistemaAutenticacion, String nombreArchivo) {
+    public void guardarUsuarios(SistemaAutenticacion sistemaAutenticacion, String nombreArchivo) throws ErrorPersistenciaException {
         try {
             ArrayList<Usuario> usuarios = (ArrayList<Usuario>) sistemaAutenticacion.listarUsuarios();
             JSONObject jsonObject = new JSONObject();
@@ -39,7 +40,7 @@ public class GestorUsuariosJSON {
             OperacionesLectoEscritura.grabar(nombreArchivo, jsonObject);
             System.out.println("✅ Usuarios guardados exitosamente en: " + nombreArchivo);
         } catch (Exception e) {
-            System.out.println("❌ Error al guardar usuarios: " + e.getMessage());
+            throw new ErrorPersistenciaException("Error al guardar usuarios en el archivo: " + nombreArchivo, nombreArchivo, e);
         }
     }
 

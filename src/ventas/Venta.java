@@ -6,6 +6,9 @@ import usuarios.clientes.Cliente;
 import usuarios.clientes.MetodoPago;
 import usuarios.vendedores.Vendedor;
 import descuentos.DescuentoMetodoPago;
+import excepciones.StockInsuficienteException;
+import excepciones.SaldoInsuficienteException;
+import excepciones.ProductoNoEncontradoException;
 import java.time.LocalDateTime;
 import java.util.*;
 
@@ -148,17 +151,21 @@ public class Venta {
         return false;
     }
     
-    public boolean procesarVenta(Stock stock) {
+    public boolean procesarVenta(Stock stock) throws StockInsuficienteException, SaldoInsuficienteException, ProductoNoEncontradoException {
         if (detalles.isEmpty()) {
-            System.out.println("❌ No hay productos en la venta.");
-            return false; // No hay productos en la venta
+            throw new IllegalArgumentException("No hay productos en la venta.");
         }
         
         // Verificar stock de todos los productos
         for (DetalleVenta detalle : detalles) {
             if (!stock.hayStock(detalle.getProducto().getId(), detalle.getCantidad())) {
-                System.out.println("❌ No hay suficiente stock del producto: " + detalle.getProducto().getNombre());
-                return false;
+                int stockDisponible = stock.obtenerCantidad(detalle.getProducto().getId());
+                throw new StockInsuficienteException(
+                    "No hay suficiente stock del producto: " + detalle.getProducto().getNombre() + 
+                    ". Disponible: " + stockDisponible + ", Requerido: " + detalle.getCantidad(),
+                    stockDisponible,
+                    detalle.getCantidad()
+                );
             }
         }
         
@@ -183,10 +190,12 @@ public class Venta {
         
         // Verificar saldo del cliente
         if (cliente.getSaldo() < totalConDescuento) {
-            System.out.println("❌ Saldo insuficiente del cliente.");
-            System.out.println("💰 Saldo actual: $" + String.format("%.2f", cliente.getSaldo()));
-            System.out.println("💵 Total de la venta: $" + String.format("%.2f", totalConDescuento));
-            return false;
+            throw new SaldoInsuficienteException(
+                "Saldo insuficiente del cliente. Saldo actual: $" + String.format("%.2f", cliente.getSaldo()) + 
+                ", Total de la venta: $" + String.format("%.2f", totalConDescuento),
+                cliente.getSaldo(),
+                totalConDescuento
+            );
         }
         
         // Remover productos del stock

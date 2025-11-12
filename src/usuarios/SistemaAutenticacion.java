@@ -3,6 +3,10 @@ package usuarios;
 import usuarios.clientes.Cliente;
 import usuarios.vendedores.Vendedor;
 import persistencia.GestorUsuariosJSON;
+import excepciones.UsuarioYaExisteException;
+import excepciones.PasswordInvalidaException;
+import excepciones.CredencialesInvalidasException;
+import excepciones.ErrorPersistenciaException;
 import java.util.*;
 import java.io.File;
 
@@ -25,22 +29,19 @@ public class SistemaAutenticacion {
     }
     
     // ----------------------REGISTRO ----------------------
-    public boolean registrarUsuario(Usuario usuario, String password) {
+    public boolean registrarUsuario(Usuario usuario, String password) throws UsuarioYaExisteException, PasswordInvalidaException {
         if (usuario == null || password == null || password.trim().isEmpty()) {
-            System.out.println("❌ Error: Usuario o contraseña inválidos.");
-            return false;
+            throw new PasswordInvalidaException("Usuario o contraseña inválidos.");
         }
         
         String email = usuario.getEmail();
         
         if (credenciales.containsKey(email)) {
-            System.out.println("❌ Error: Ya existe un usuario con este email.");
-            return false;
+            throw new UsuarioYaExisteException("Ya existe un usuario con este email: " + email);
         }
         
         if (password.length() < 6) {
-            System.out.println("❌ Error: La contraseña debe tener al menos 6 caracteres.");
-            return false;
+            throw new PasswordInvalidaException("La contraseña debe tener al menos 6 caracteres.");
         }
         
         // Crear credenciales y registrar usuario
@@ -56,23 +57,19 @@ public class SistemaAutenticacion {
     }
     
     // ---------------------- LOGIN ----------------------
-    public boolean login(String email, String password) {
+    public boolean login(String email, String password) throws CredencialesInvalidasException {
         // Verificar si hay usuarios registrados
         if (usuarios.isEmpty() || credenciales.isEmpty()) {
-            System.out.println("❌ Error: No hay usuarios registrados en el sistema.");
-            System.out.println("📝 Por favor, regístrese primero antes de iniciar sesión.");
-            return false;
+            throw new CredencialesInvalidasException("No hay usuarios registrados en el sistema. Por favor, regístrese primero antes de iniciar sesión.");
         }
         
         if (email == null || password == null) {
-            System.out.println("❌ Error: Email o contraseña no pueden ser nulos.");
-            return false;
+            throw new CredencialesInvalidasException("Email o contraseña no pueden ser nulos.");
         }
         
         Credenciales creds = credenciales.get(email);
         if (creds == null) {
-            System.out.println("❌ Error: Usuario no encontrado.");
-            return false;
+            throw new CredencialesInvalidasException("Usuario no encontrado: " + email);
         }
         
         if (creds.verificarPassword(password)) {
@@ -81,8 +78,7 @@ public class SistemaAutenticacion {
             System.out.println("✅ Login exitoso. Bienvenido, " + usuarioActual.getNombre() + "!");
             return true;
         } else {
-            System.out.println("❌ Error: Contraseña incorrecta.");
-            return false;
+            throw new CredencialesInvalidasException("Contraseña incorrecta para el usuario: " + email);
         }
     }
     
@@ -165,7 +161,7 @@ public class SistemaAutenticacion {
     private void guardarUsuariosEnArchivo() {
         try {
             gestorUsuariosJSON.guardarUsuarios(this, ARCHIVO_USUARIOS);
-        } catch (Exception e) {
+        } catch (ErrorPersistenciaException e) {
             System.out.println("❌ Error al guardar usuarios: " + e.getMessage());
         }
     }
@@ -173,7 +169,7 @@ public class SistemaAutenticacion {
     /**
      * Guarda usuarios manualmente (para uso externo)
      */
-    public void guardarUsuarios() {
-        guardarUsuariosEnArchivo();
+    public void guardarUsuarios() throws ErrorPersistenciaException {
+        gestorUsuariosJSON.guardarUsuarios(this, ARCHIVO_USUARIOS);
     }
 }

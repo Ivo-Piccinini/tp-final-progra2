@@ -8,6 +8,13 @@ import ventas.Venta;
 import ventas.DetalleVenta;
 import descuentos.DescuentoMetodoPago;
 import persistencia.StockJSON;
+import excepciones.ProductoNoEncontradoException;
+import excepciones.StockInsuficienteException;
+import excepciones.SaldoInsuficienteException;
+import excepciones.UsuarioYaExisteException;
+import excepciones.PasswordInvalidaException;
+import excepciones.CredencialesInvalidasException;
+import excepciones.ErrorPersistenciaException;
 import java.time.LocalDateTime;
 import java.util.*;
 import java.util.Scanner;
@@ -42,7 +49,12 @@ public class SistemaComercio {
     
     // ---------------------- METODOS DE AUTENTICACION ----------------------
     public boolean login(String email, String password) {
-        return sistemaAutenticacion.login(email, password);
+        try {
+            return sistemaAutenticacion.login(email, password);
+        } catch (CredencialesInvalidasException e) {
+            System.out.println("❌ Error: " + e.getMessage());
+            return false;
+        }
     }
     
     public void logout() {
@@ -50,7 +62,15 @@ public class SistemaComercio {
     }
     
     public boolean registrarUsuario(Usuario usuario, String password) {
-        return sistemaAutenticacion.registrarUsuario(usuario, password);
+        try {
+            return sistemaAutenticacion.registrarUsuario(usuario, password);
+        } catch (UsuarioYaExisteException e) {
+            System.out.println("❌ Error: " + e.getMessage());
+            return false;
+        } catch (PasswordInvalidaException e) {
+            System.out.println("❌ Error: " + e.getMessage());
+            return false;
+        }
     }
     
     public Usuario getUsuarioActual() {
@@ -111,34 +131,34 @@ public class SistemaComercio {
     /**
      * Permite a un cliente comprar productos directamente
      */
-    public boolean comprarProducto(int productoId, int cantidad) {
+    public boolean comprarProducto(int productoId, int cantidad) throws ProductoNoEncontradoException, StockInsuficienteException, SaldoInsuficienteException {
         if (!estaLogueado()) {
-            System.out.println("❌ Error: Debe estar logueado para realizar una compra.");
-            return false;
+            throw new IllegalStateException("Debe estar logueado para realizar una compra.");
         }
         
         Usuario usuario = getUsuarioActual();
         if (!(usuario instanceof Cliente)) {
-            System.out.println("❌ Error: Solo los clientes pueden realizar compras directas.");
-            return false;
+            throw new IllegalStateException("Solo los clientes pueden realizar compras directas.");
         }
         
         Cliente cliente = (Cliente) usuario;
         Producto producto = stock.obtenerProducto(productoId);
         
         if (producto == null) {
-            System.out.println("❌ Error: Producto no encontrado.");
-            return false;
+            throw new ProductoNoEncontradoException("Producto no encontrado con ID: " + productoId, productoId);
         }
         
         if (!producto.isActivo()) {
-            System.out.println("❌ Error: El producto no está disponible.");
-            return false;
+            throw new IllegalStateException("El producto no está disponible.");
         }
         
         if (!stock.hayStock(productoId, cantidad)) {
-            System.out.println("❌ Error: No hay suficiente stock disponible.");
-            return false;
+            int stockDisponible = stock.obtenerCantidad(productoId);
+            throw new StockInsuficienteException(
+                "No hay suficiente stock disponible. Disponible: " + stockDisponible + ", Requerido: " + cantidad,
+                stockDisponible,
+                cantidad
+            );
         }
         
         double subtotal = producto.getPrecio() * cantidad;
@@ -149,8 +169,7 @@ public class SistemaComercio {
         // Seleccionar método de pago
         MetodoPago metodoPagoSeleccionado = seleccionarMetodoPago(cliente);
         if (metodoPagoSeleccionado == null) {
-            System.out.println("❌ Compra cancelada.");
-            return false;
+            throw new IllegalStateException("Compra cancelada por el usuario.");
         }
         
         // Calcular descuento y total final
@@ -171,42 +190,50 @@ public class SistemaComercio {
         System.out.println("═══════════════════════════════════");
         
         if (cliente.getSaldo() < totalCompra) {
-            System.out.println("❌ Error: Saldo insuficiente.");
-            System.out.println("💰 Su saldo actual: $" + String.format("%.2f", cliente.getSaldo()));
-            System.out.println("💵 Total de la compra: $" + String.format("%.2f", totalCompra));
-            return false;
+            throw new SaldoInsuficienteException(
+                "Saldo insuficiente. Saldo actual: $" + String.format("%.2f", cliente.getSaldo()) + 
+                ", Total de la compra: $" + String.format("%.2f", totalCompra),
+                cliente.getSaldo(),
+                totalCompra
+            );
         }
         
         // Procesar la compra
-        if (stock.eliminarProducto(productoId, cantidad)) {
-            // Actualizar saldo del cliente
-            cliente.setSaldo(cliente.getSaldo() - totalCompra);
-            
-            // Registrar la compra con descuento
-            String descripcionCompra = producto.getNombre() + " x" + cantidad + " = $" + String.format("%.2f", totalCompra);
-            if (descuento > 0) {
-                descripcionCompra += " (Descuento: $" + String.format("%.2f", descuento) + ")";
-            }
-            cliente.agregarCompra(descripcionCompra);
-            
-            // Guardar cambios en archivo JSON
-            guardarStockEnArchivo();
-            sistemaAutenticacion.guardarUsuarios();
-            
-            System.out.println("✅ ¡Compra realizada exitosamente!");
-            System.out.println("📱 Producto: " + producto.getNombre());
-            System.out.println("📦 Cantidad: " + cantidad);
-            System.out.println("💵 Total pagado: $" + String.format("%.2f", totalCompra));
-            if (descuento > 0) {
-                System.out.println("🎯 Descuento aplicado: $" + String.format("%.2f", descuento));
-            }
-            System.out.println("💰 Saldo restante: $" + String.format("%.2f", cliente.getSaldo()));
-            
-            return true;
-        } else {
-            System.out.println("❌ Error al procesar la compra.");
-            return false;
+        try {
+            stock.eliminarProducto(productoId, cantidad);
+        } catch (ProductoNoEncontradoException | StockInsuficienteException e) {
+            // Estas excepciones ya fueron validadas antes, pero por si acaso
+            throw e;
         }
+        
+        // Actualizar saldo del cliente
+        cliente.setSaldo(cliente.getSaldo() - totalCompra);
+        
+        // Registrar la compra con descuento
+        String descripcionCompra = producto.getNombre() + " x" + cantidad + " = $" + String.format("%.2f", totalCompra);
+        if (descuento > 0) {
+            descripcionCompra += " (Descuento: $" + String.format("%.2f", descuento) + ")";
+        }
+        cliente.agregarCompra(descripcionCompra);
+        
+        // Guardar cambios en archivo JSON
+        guardarStockEnArchivo();
+        try {
+            sistemaAutenticacion.guardarUsuarios();
+        } catch (ErrorPersistenciaException e) {
+            System.out.println("⚠️ Advertencia: " + e.getMessage());
+        }
+        
+        System.out.println("✅ ¡Compra realizada exitosamente!");
+        System.out.println("📱 Producto: " + producto.getNombre());
+        System.out.println("📦 Cantidad: " + cantidad);
+        System.out.println("💵 Total pagado: $" + String.format("%.2f", totalCompra));
+        if (descuento > 0) {
+            System.out.println("🎯 Descuento aplicado: $" + String.format("%.2f", descuento));
+        }
+        System.out.println("💰 Saldo restante: $" + String.format("%.2f", cliente.getSaldo()));
+        
+        return true;
     }
     
     /**
@@ -233,7 +260,11 @@ public class SistemaComercio {
         cliente.setSaldo(cliente.getSaldo() + monto);
         
         // Guardar cambios en archivo JSON
-        sistemaAutenticacion.guardarUsuarios();
+        try {
+            sistemaAutenticacion.guardarUsuarios();
+        } catch (ErrorPersistenciaException e) {
+            System.out.println("⚠️ Advertencia: " + e.getMessage());
+        }
         
         System.out.println("✅ Saldo agregado exitosamente!");
         System.out.println("💰 Saldo anterior: $" + String.format("%.2f", cliente.getSaldo() - monto));
@@ -479,18 +510,30 @@ public class SistemaComercio {
             return false;
         }
         
-        boolean resultado = venta.procesarVenta(stock);
-        if (resultado) {
-            // Guardar cambios en archivo JSON
-            guardarStockEnArchivo();
-            sistemaAutenticacion.guardarUsuarios();
-            System.out.println("✅ Venta procesada exitosamente.");
-            venta.mostrarDetallesVenta();
-        } else {
-            System.out.println("❌ Error al procesar la venta. Verifique el stock.");
+        try {
+            boolean resultado = venta.procesarVenta(stock);
+            if (resultado) {
+                // Guardar cambios en archivo JSON
+                guardarStockEnArchivo();
+                try {
+                    sistemaAutenticacion.guardarUsuarios();
+                } catch (ErrorPersistenciaException e) {
+                    System.out.println("⚠️ Advertencia: " + e.getMessage());
+                }
+                System.out.println("✅ Venta procesada exitosamente.");
+                venta.mostrarDetallesVenta();
+            }
+            return resultado;
+        } catch (StockInsuficienteException e) {
+            System.out.println("❌ Error: " + e.getMessage());
+            return false;
+        } catch (SaldoInsuficienteException e) {
+            System.out.println("❌ Error: " + e.getMessage());
+            return false;
+        } catch (ProductoNoEncontradoException e) {
+            System.out.println("❌ Error: " + e.getMessage());
+            return false;
         }
-        
-        return resultado;
     }
     
     public void mostrarVentas() {

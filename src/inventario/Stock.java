@@ -1,6 +1,8 @@
 package inventario;
 
 import productos.Producto;
+import excepciones.StockInsuficienteException;
+import excepciones.ProductoNoEncontradoException;
 import java.time.LocalDateTime;
 import java.util.*;
 
@@ -46,21 +48,25 @@ public class Stock {
         ultimaActualizacion = LocalDateTime.now();
     }
     
-    public boolean eliminarProducto(int productoId, int cantidad) {
+    public boolean eliminarProducto(int productoId, int cantidad) throws ProductoNoEncontradoException, StockInsuficienteException {
         if (cantidad < 0) {
             throw new IllegalArgumentException("La cantidad no puede ser negativa.");
         }
 
         // si en el inventario no existe el id, el producto no existe
         if (!inventario.containsKey(productoId)) {
-            return false;
+            throw new ProductoNoEncontradoException("El producto con ID " + productoId + " no existe en el inventario.", productoId);
         }
         
         int cantidadActual = inventario.get(productoId);
 
         // si la cantidad actual es menor que la cantidad pasada por parametro, no hay stock del producto
         if (cantidadActual < cantidad) {
-            return false;
+            throw new StockInsuficienteException(
+                "Stock insuficiente para el producto ID " + productoId + ". Disponible: " + cantidadActual + ", Requerido: " + cantidad,
+                cantidadActual,
+                cantidad
+            );
         }
         
         int nuevaCantidad = cantidadActual - cantidad;
