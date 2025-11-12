@@ -494,6 +494,41 @@ public class SistemaComercio {
     }
     
     /**
+     * Agrega un producto a una venta buscándolo por nombre
+     */
+    public boolean agregarProductoAVentaPorNombre(Venta venta, String nombreProducto, int cantidad) {
+        if (venta == null) {
+            System.out.println("❌ Error: La venta no puede ser null.");
+            return false;
+        }
+        
+        if (nombreProducto == null || nombreProducto.trim().isEmpty()) {
+            System.out.println("❌ Error: El nombre del producto no puede estar vacío.");
+            return false;
+        }
+        
+        Producto producto = stock.buscarProductoPorNombre(nombreProducto);
+        if (producto == null) {
+            System.out.println("❌ Error: Producto no encontrado con el nombre: " + nombreProducto);
+            return false;
+        }
+        
+        try {
+            boolean resultado = venta.agregarProducto(producto, cantidad, stock);
+            if (resultado) {
+                System.out.println("✅ Producto agregado a la venta: " + producto.getNombre() + " x" + cantidad);
+            }
+            return resultado;
+        } catch (StockInsuficienteException e) {
+            System.out.println("❌ Error: " + e.getMessage());
+            return false;
+        } catch (IllegalArgumentException e) {
+            System.out.println("❌ Error: " + e.getMessage());
+            return false;
+        }
+    }
+    
+    /**
      * Permite a un vendedor agregar un nuevo producto al stock
      */
     public boolean agregarProductoAlStock(String nombre, String descripcion, CategoriaProducto categoria, double precio, String marca, String modelo, String especificaciones, int cantidad) {

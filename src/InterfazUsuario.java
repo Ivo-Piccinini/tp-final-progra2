@@ -691,7 +691,7 @@ public class InterfazUsuario {
         }
         
         System.out.println("\n📝 Para procesar una venta:");
-        System.out.println("1. Seleccione el producto por ID");
+        System.out.println("1. Ingrese el nombre del producto");
         System.out.println("2. Ingrese la cantidad");
         System.out.println("3. Confirme la venta");
         
@@ -708,16 +708,27 @@ public class InterfazUsuario {
      */
     private void procesarVenta() {
         try {
-            System.out.print("ID del producto: ");
-            int productoId = Integer.parseInt(scanner.nextLine());
+            System.out.print("Nombre del producto (Enter para cancelar): ");
+            String nombreProducto = scanner.nextLine().trim();
+            
+            if (nombreProducto.isEmpty()) {
+                System.out.println("❌ Venta cancelada.");
+                return;
+            }
             
             System.out.print("Cantidad: ");
             int cantidad = Integer.parseInt(scanner.nextLine());
             
+            if (cantidad <= 0) {
+                System.out.println("❌ La cantidad debe ser mayor a 0.");
+                pausar();
+                return;
+            }
+            
             // Crear venta simple
             var venta = sistema.crearVenta();
             if (venta != null) {
-                boolean exito = sistema.agregarProductoAVenta(venta, productoId, cantidad);
+                boolean exito = sistema.agregarProductoAVentaPorNombre(venta, nombreProducto, cantidad);
                 if (exito) {
                     boolean procesada = sistema.procesarVenta(venta);
                     if (procesada) {
@@ -726,10 +737,9 @@ public class InterfazUsuario {
                         System.out.println("❌ Error al procesar la venta.");
                     }
                 }
-                // El mensaje de error específico ya se muestra en agregarProductoAVenta()
             }
         } catch (NumberFormatException e) {
-            System.out.println("❌ Debe ingresar números válidos.");
+            System.out.println("❌ Debe ingresar un número válido para la cantidad.");
         }
         
         pausar();
@@ -903,7 +913,6 @@ public class InterfazUsuario {
         System.out.println("═══════════════════════════════════");
         
         try {
-            // Mostrar lista de usuarios activos
             sistema.listarTodosLosUsuarios();
             
             System.out.print("\nIngrese el email del usuario a dar de baja: ");
@@ -914,8 +923,7 @@ public class InterfazUsuario {
                 pausar();
                 return;
             }
-            
-            // Confirmar acción
+
             System.out.print("¿Está seguro de dar de baja a este usuario? (s/n): ");
             String confirmacion = scanner.nextLine().toLowerCase();
             
@@ -943,7 +951,6 @@ public class InterfazUsuario {
         System.out.println("═══════════════════════════════════");
         
         try {
-            // Mostrar lista de usuarios inactivos
             sistema.listarTodosLosUsuarios();
             
             System.out.print("\nIngrese el email del usuario a reactivar: ");
@@ -974,7 +981,6 @@ public class InterfazUsuario {
         System.out.println("═══════════════════════════════════");
         
         try {
-            // Mostrar lista de usuarios
             sistema.listarTodosLosUsuarios();
             
             System.out.print("\nIngrese el email del usuario a modificar: ");
@@ -1047,8 +1053,6 @@ public class InterfazUsuario {
                 if (e.getCause() != null) {
                     System.out.println("   Causa: " + e.getCause().getMessage());
                 }
-                // No re-lanzar la excepción, solo mostrar el error y continuar
-                // Los cambios ya están en memoria, solo falló el guardado en disco
                 return;
             }
             
