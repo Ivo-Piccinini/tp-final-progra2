@@ -239,7 +239,7 @@ public class SistemaAutenticacion {
     /**
      * Modifica datos específicos de un Vendedor
      */
-    public boolean modificarVendedor(String email, Double nuevoSalario) 
+    public boolean modificarVendedor(String email, Double nuevoSalario, Double nuevaComision) 
             throws UsuarioNoEncontradoException {
         Usuario usuario = buscarUsuarioPorEmail(email);
         
@@ -251,6 +251,10 @@ public class SistemaAutenticacion {
         
         if (nuevoSalario != null && nuevoSalario >= 0) {
             vendedor.setSalario(nuevoSalario);
+        }
+        
+        if (nuevaComision != null && nuevaComision >= 0 && nuevaComision <= 100) {
+            vendedor.setComisionPorVenta(nuevaComision);
         }
         
         // No guardar aquí, se guardará al final de todas las modificaciones

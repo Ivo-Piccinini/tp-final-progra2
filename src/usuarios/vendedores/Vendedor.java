@@ -85,10 +85,31 @@ public class Vendedor extends Usuario {
         this.comisionPorVenta = comisionPorVenta;
     }
     public List<String> getHistorialVentas() {
+        if (historialVentas == null) {
+            historialVentas = new ArrayList<>();
+        }
         return new ArrayList<>(historialVentas);
+    }
+    
+    /**
+     * Establece el historial de ventas (usado para deserialización)
+     */
+    public void setHistorialVentas(List<String> historialVentas) {
+        if (historialVentas == null) {
+            this.historialVentas = new ArrayList<>();
+        } else {
+            this.historialVentas = new ArrayList<>(historialVentas);
+        }
     }
     public double getTotalComisiones() {
         return totalComisiones;
+    }
+    
+    public void setTotalComisiones(double totalComisiones) {
+        if (totalComisiones < 0) {
+            throw new IllegalArgumentException("El total de comisiones no puede ser negativo.");
+        }
+        this.totalComisiones = totalComisiones;
     }
     
     // ---------------------- METODOS ----------------------
@@ -97,24 +118,22 @@ public class Vendedor extends Usuario {
         historialVentas.add(venta);
         cantVentas++;
         
-        // Calcular comisión
+        // Calcular comisión y agregarla automáticamente al salario
         double comision = montoVenta * (comisionPorVenta / 100.0);
-        totalComisiones += comision;
+        salario += comision;
     }
     
     public double calcularSalarioTotal() {
-        return salario + totalComisiones;
+        return salario;
     }
 
     // ---------------------- MÉTODOS SOBREESCRITOS ----------------------
     @Override
     public String toString() {
         return super.toString() + "\n" +
-                "  💵 Salario Base: $" + String.format("%.2f", salario) + "\n" +
+                "  💵 Salario (incluye comisiones): $" + String.format("%.2f", salario) + "\n" +
                 "  📈 Cant. Ventas Realizadas: " + cantVentas + "\n" +
                 "  💰 Comisión por Venta: " + String.format("%.1f", comisionPorVenta) + "%\n" +
-                "  💎 Total Comisiones: $" + String.format("%.2f", totalComisiones) + "\n" +
-                "  💰 Salario Total: $" + String.format("%.2f", calcularSalarioTotal()) + "\n" +
                 "══════════════════════════════════";
     }
 

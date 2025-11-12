@@ -195,6 +195,7 @@ public class GestorUsuariosJSON {
             usuarioJson.put("tipoUsuario", "VENDEDOR");
             usuarioJson.put("salario", vendedor.getSalario());
             usuarioJson.put("comision", vendedor.getComisionPorVenta());
+            usuarioJson.put("totalComisiones", vendedor.getTotalComisiones());
             
             // Historial de ventas
             JSONArray ventasArray = new JSONArray();
@@ -249,9 +250,21 @@ public class GestorUsuariosJSON {
                 double salario = usuarioJson.getDouble("salario");
                 double comision = usuarioJson.getDouble("comision");
                 int cantVentas = usuarioJson.optInt("totalVentas", 0);
+                double totalComisiones = usuarioJson.optDouble("totalComisiones", 0.0);
                 
                 Vendedor vendedor = new Vendedor(id, nombre, apellido, email, rol, estado, dni, cantVentas, salario);
                 vendedor.setComisionPorVenta(comision);
+                vendedor.setTotalComisiones(totalComisiones);
+                
+                // Restaurar historial de ventas
+                if (usuarioJson.has("ventasRealizadas")) {
+                    JSONArray ventasArray = usuarioJson.getJSONArray("ventasRealizadas");
+                    List<String> historialVentas = new ArrayList<>();
+                    for (int i = 0; i < ventasArray.length(); i++) {
+                        historialVentas.add(ventasArray.getString(i));
+                    }
+                    vendedor.setHistorialVentas(historialVentas);
+                }
                 
                 return vendedor;
             }

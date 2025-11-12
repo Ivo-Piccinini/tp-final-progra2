@@ -590,16 +590,35 @@ public class SistemaComercio {
     }
     
     public void mostrarVentas() {
+        if (!estaLogueado()) {
+            System.out.println("❌ Error: Debe estar logueado para ver las ventas.");
+            return;
+        }
+        
+        Usuario usuario = getUsuarioActual();
+        if (!(usuario instanceof Vendedor)) {
+            System.out.println("❌ Error: Solo los vendedores pueden ver su historial de ventas.");
+            return;
+        }
+        
+        Vendedor vendedor = (Vendedor) usuario;
+        List<String> historialVentas = vendedor.getHistorialVentas();
+        
         System.out.println("🧾 HISTORIAL DE VENTAS");
         System.out.println("═══════════════════════════════════");
+        System.out.println("👤 Vendedor: " + vendedor.getNombre() + " " + vendedor.getApellido());
+        System.out.println("📊 Total de ventas realizadas: " + vendedor.getCantVentas());
+        System.out.println("═══════════════════════════════════");
         
-        if (ventas.isEmpty()) {
+        if (historialVentas == null || historialVentas.isEmpty()) {
             System.out.println("📭 No hay ventas registradas.");
         } else {
-            for (Venta venta : ventas) {
-                System.out.println(venta.toString());
+            System.out.println("\n📋 DETALLE DE VENTAS:\n");
+            for (int i = 0; i < historialVentas.size(); i++) {
+                System.out.println((i + 1) + ". " + historialVentas.get(i));
             }
         }
+        System.out.println("═══════════════════════════════════");
     }
     
     // ---------------------- METODOS DE GESTION DE USUARIOS (VENDEDOR) ----------------------
@@ -677,10 +696,10 @@ public class SistemaComercio {
     /**
      * Modifica datos específicos de un Vendedor
      */
-    public boolean modificarVendedor(String email, Double nuevoSalario) 
+    public boolean modificarVendedor(String email, Double nuevoSalario, Double nuevaComision) 
             throws UsuarioNoEncontradoException {
         try {
-            return sistemaAutenticacion.modificarVendedor(email, nuevoSalario);
+            return sistemaAutenticacion.modificarVendedor(email, nuevoSalario, nuevaComision);
         } catch (IllegalArgumentException e) {
             System.out.println("❌ Error: " + e.getMessage());
             return false;
@@ -690,7 +709,7 @@ public class SistemaComercio {
     /**
      * Guarda los usuarios en el archivo JSON
      */
-    public void guardarUsuarios() throws excepciones.ErrorPersistenciaException {
+    public void guardarUsuarios() throws ErrorPersistenciaException {
         sistemaAutenticacion.guardarUsuarios();
     }
 }

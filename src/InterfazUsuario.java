@@ -273,8 +273,10 @@ public class InterfazUsuario {
                 } else if (tipoUsuario == 2) {
                     // Crear vendedor
                     double salario = solicitarNumero("Salario base: $", "salario");
+                    double comision = solicitarNumero("Comisión por venta (%): ", "comision");
                     
                     usuario = new Vendedor(nombre, apellido, email, usuarios.Rol.VENDEDOR, 1, dni, salario);
+                    ((Vendedor) usuario).setComisionPorVenta(comision);
                 }
                 
                 if (usuario != null) {
@@ -1037,12 +1039,31 @@ public class InterfazUsuario {
                 if (!salarioStr.isEmpty()) {
                     try {
                         nuevoSalario = Double.parseDouble(salarioStr);
+                        if (nuevoSalario < 0) {
+                            System.out.println("⚠️ El salario no puede ser negativo, se mantendrá el valor actual.");
+                            nuevoSalario = null;
+                        }
                     } catch (NumberFormatException e) {
                         System.out.println("⚠️ Salario inválido, se mantendrá el valor actual.");
                     }
                 }
                 
-                sistema.modificarVendedor(email, nuevoSalario);
+                System.out.print("Nueva comisión por venta (%) [" + String.format("%.1f", vendedor.getComisionPorVenta()) + "]: ");
+                String comisionStr = scanner.nextLine().trim();
+                Double nuevaComision = null;
+                if (!comisionStr.isEmpty()) {
+                    try {
+                        nuevaComision = Double.parseDouble(comisionStr);
+                        if (nuevaComision < 0 || nuevaComision > 100) {
+                            System.out.println("⚠️ La comisión debe estar entre 0 y 100, se mantendrá el valor actual.");
+                            nuevaComision = null;
+                        }
+                    } catch (NumberFormatException e) {
+                        System.out.println("⚠️ Comisión inválida, se mantendrá el valor actual.");
+                    }
+                }
+                
+                sistema.modificarVendedor(email, nuevoSalario, nuevaComision);
             }
             
             // Guardar todos los cambios al final
