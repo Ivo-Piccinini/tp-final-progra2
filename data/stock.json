@@ -1,0 +1,74 @@
+{
+    "valorTotalInventario": 1.833285E8,
+    "contadorProductos": 5,
+    "cantidadProductos": 5,
+    "fechaActualizacion": "2025-11-14T17:40:46.973106800",
+    "stockTotal": 149,
+    "productos": [
+        {
+            "descripcion": "Smartphone de apple",
+            "marca": "Apple",
+            "precio": 1200000,
+            "especificaciones": "Cámara de alta definición, 128gb de almacenamiento, 6gb de ram",
+            "categoria": "Smartphone",
+            "fechaCreacion": "2025-11-14T17:33:39.182264300",
+            "id": 0,
+            "cantidad": 23,
+            "nombre": "Iphone 17",
+            "modelo": "Iphone 7 Pro Max",
+            "activo": true
+        },
+        {
+            "descripcion": "Cargador de Iphone tipo c de 20w",
+            "marca": "Apple",
+            "precio": 200500,
+            "especificaciones": "20w, cable de 15cm, ficha tipo c",
+            "categoria": "Smartphone",
+            "fechaCreacion": "2025-11-14T17:35:29.357449200",
+            "id": 1,
+            "cantidad": 57,
+            "nombre": "Cargador Iphone 20w",
+            "modelo": "2g65a",
+            "activo": true
+        },
+        {
+            "descripcion": "Mouse inalámbrico ideal para gaming",
+            "marca": "Redragon",
+            "precio": 700000,
+            "especificaciones": "Baja latencia, inalámbrico, RGB",
+            "categoria": "Mouse",
+            "fechaCreacion": "2025-11-14T17:36:39.610400300",
+            "id": 2,
+            "cantidad": 12,
+            "nombre": "Mouse Redragon",
+            "modelo": "23hj9",
+            "activo": true
+        },
+        {
+            "descripcion": "PC gamer ideal para juegos de alta calidad visual",
+            "marca": "ACER",
+            "precio": 3200000,
+            "especificaciones": "Ryzen 7, 32gb de ram, 1tb ssd",
+            "categoria": "Laptop",
+            "fechaCreacion": "2025-11-14T17:39:18.703789700",
+            "id": 3,
+            "cantidad": 32,
+            "nombre": "PC Gamer",
+            "modelo": "hsnfc7",
+            "activo": true
+        },
+        {
+            "descripcion": "Monitor curvo de alta resolución",
+            "marca": "Samsung",
+            "precio": 1340000,
+            "especificaciones": "1080x1920, curvo, 4k full hd",
+            "categoria": "Monitor",
+            "fechaCreacion": "2025-11-14T17:40:46.973106800",
+            "id": 4,
+            "cantidad": 25,
+            "nombre": "Monitor 4k",
+            "modelo": "jsgs621",
+            "activo": true
+        }
+    ]
+}
