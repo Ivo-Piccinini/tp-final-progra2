@@ -6,6 +6,16 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * ELECCION DE COLECCIONES:
+ *
+ * - ArrayList para historial de compras: Usamos ArrayList para mantener las compras en orden
+ *   cronológico, donde vamos agregando cada compra una tras otra y luego podemos verlas todas
+ *   en secuencia.
+ *
+ * - ArrayList para preferencias: Usamos ArrayList para guardar las preferencias del cliente
+ *   en una lista simple donde podemos agregar y recorrer todas las preferencias en orden.
+ */
 public class Cliente extends Usuario {
     private int cantProductosComprados = 0;
     private MetodoPago metodoPago = MetodoPago.EFECTIVO;
@@ -97,6 +107,10 @@ public class Cliente extends Usuario {
     }
     
     // ---------------------- METODOS  ----------------------
+    /**
+     * Agrega productos al historial de compras y aumenta la cantidad de productos comprados
+     * @param descripcionCompra Descripcion de la compra
+     */
     public void agregarCompra(String descripcionCompra) {
         String compra = LocalDateTime.now() + " - " + descripcionCompra;
         historialCompras.add(compra);

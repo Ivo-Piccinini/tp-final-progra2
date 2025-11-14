@@ -7,7 +7,6 @@ import java.time.LocalDateTime;
 
 /**
  * Clase que representa un producto de tecnología en el sistema.
- * Incluye información básica, especificaciones técnicas y estado del producto.
  */
 public class Producto implements IEntidad<Integer> {
     private int id;
@@ -121,22 +120,6 @@ public class Producto implements IEntidad<Integer> {
     }
     public LocalDateTime getFechaCreacion() {
         return fechaCreacion;
-    }
-    
-    // ---------------------- METODOS PROPIOS ----------------------
-    public void desactivar() {
-        this.activo = false;
-    }
-    
-    public void activar() {
-        this.activo = true;
-    }
-    
-    public double calcularPrecioConDescuento(double porcentajeDescuento) {
-        if (porcentajeDescuento < 0 || porcentajeDescuento > 100) {
-            throw new IllegalArgumentException("El porcentaje de descuento debe estar entre 0 y 100.");
-        }
-        return precio * (1 - porcentajeDescuento / 100.0);
     }
     
     // ---------------------- METODOS SOBREESCRITOS ----------------------

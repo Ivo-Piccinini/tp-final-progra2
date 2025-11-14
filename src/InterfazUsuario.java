@@ -1,6 +1,7 @@
 import productos.CategoriaProducto;
 import usuarios.Usuario;
 import usuarios.clientes.Cliente;
+import usuarios.clientes.MetodoPago;
 import usuarios.vendedores.Vendedor;
 import excepciones.ProductoNoEncontradoException;
 import excepciones.StockInsuficienteException;
@@ -26,6 +27,9 @@ public class InterfazUsuario {
     }
     
     // ---------------------- METODO PRINCIPAL ----------------------
+    /**
+     * Ejecuta el sistema
+     * */
     public void ejecutar() {
         while (sistemaActivo) {
             try {
@@ -43,6 +47,9 @@ public class InterfazUsuario {
     }
     
     // ---------------------- METODOS DE MENU  ----------------------
+    /**
+     *  Muestra el menú principal del sistema
+     * */
     private void mostrarMenuPrincipal() {
         limpiarPantalla();
         System.out.println("🏪 SISTEMA DE COMERCIO DE TECNOLOGÍA");
@@ -54,7 +61,10 @@ public class InterfazUsuario {
             mostrarMenuLogueado();
         }
     }
-    
+
+    /**
+     *  Muestra el menú para usuarios no logueados
+     * */
     private void mostrarMenuNoLogueado() {
         System.out.println("🔐 MENÚ PRINCIPAL");
         System.out.println("═══════════════════════════════════");
@@ -73,7 +83,10 @@ public class InterfazUsuario {
         
         System.out.println("═══════════════════════════════════");
     }
-    
+
+    /**
+     *  Muestra el menú para usuarios logueados dependiendo el tipo de usuario (cliente o vendedor)
+     * */
     private void mostrarMenuLogueado() {
         if (sistema.getUsuarioActual() instanceof Cliente) {
             mostrarMenuCliente();
@@ -81,7 +94,10 @@ public class InterfazUsuario {
             mostrarMenuVendedor();
         }
     }
-    
+
+    /**
+     *  Muestra el menú para clientes
+     * */
     private void mostrarMenuCliente() {
         Cliente cliente = (Cliente) sistema.getUsuarioActual();
         System.out.println("🛍️ MENÚ CLIENTE - " + cliente.getNombre());
@@ -95,7 +111,10 @@ public class InterfazUsuario {
         System.out.println("7. 🚪 Cerrar Sesión");
         System.out.println("═══════════════════════════════════");
     }
-    
+
+    /**
+     *  Muestra el menú para vendedores
+     * */
     private void mostrarMenuVendedor() {
         Vendedor vendedor = (Vendedor) sistema.getUsuarioActual();
         System.out.println("💼 MENÚ VENDEDOR - " + vendedor.getNombre());
@@ -111,6 +130,11 @@ public class InterfazUsuario {
     }
     
     // ---------------------- MÉTODOS DE PROCESAMIENTO ----------------------
+
+    /**
+     *  Método que ejecuta el método correspondiente para procesar la opcion del usuario dependiendo de si está logueado o no
+     * @param opcion opción elegida por el usuario
+     * */
     private void procesarOpcion(int opcion) {
         if (!sistema.estaLogueado()) {
             procesarOpcionNoLogueado(opcion);
@@ -118,7 +142,11 @@ public class InterfazUsuario {
             procesarOpcionLogueado(opcion);
         }
     }
-    
+
+    /**
+     *  Procesa la opción elegida por el usuario no logueado
+     * @param opcion opción elegida por el usuario no logueado
+     * */
     private void procesarOpcionNoLogueado(int opcion) {
         if (sistema.hayUsuariosRegistrados()) {
             // Menú con opción de iniciar sesión
@@ -137,7 +165,7 @@ public class InterfazUsuario {
                     pausar();
             }
         } else {
-            // Menú sin opción de iniciar sesión
+            // Menú sin opción de iniciar sesión (para cuando no hay usuarios en el sistema)
             switch (opcion) {
                 case 1:
                     registrarse();
@@ -151,7 +179,11 @@ public class InterfazUsuario {
             }
         }
     }
-    
+
+    /**
+     *  Procesa la opción elegida por el usuario logueado
+     * @param opcion opcion elegida por el usuario logueado
+     * */
     private void procesarOpcionLogueado(int opcion) {
         if (sistema.getUsuarioActual() instanceof Cliente) {
             procesarOpcionCliente(opcion);
@@ -159,7 +191,11 @@ public class InterfazUsuario {
             procesarOpcionVendedor(opcion);
         }
     }
-    
+
+    /**
+     *  Procesa la opcion elegida por el usuario de tipo cliente
+     * @param opcion opcion elegida por el cliente
+     * */
     private void procesarOpcionCliente(int opcion) {
         switch (opcion) {
             case 1:
@@ -190,7 +226,11 @@ public class InterfazUsuario {
                 pausar();
         }
     }
-    
+
+    /**
+     *  Procesa la opcion elegida por el usuario de tipo vendedor
+     * @param opcion opcion elegida por el vendedor
+     * */
     private void procesarOpcionVendedor(int opcion) {
         switch (opcion) {
             case 1:
@@ -223,6 +263,9 @@ public class InterfazUsuario {
     }
     
     // ---------------------- METODOS DE  AUTENTICACION ----------------------
+    /**
+     *  Menú de inicio de sesión
+     * */
     private void iniciarSesion() {
         System.out.println("🔑 INICIAR SESIÓN");
         System.out.println("═══════════════════════════════════");
@@ -247,7 +290,10 @@ public class InterfazUsuario {
         
         pausar();
     }
-    
+
+    /**
+     *  Menú de registro
+     * */
     private void registrarse() {
         System.out.println("📝 REGISTRARSE");
         System.out.println("═══════════════════════════════════");
@@ -256,6 +302,7 @@ public class InterfazUsuario {
         
         while (!registroExitoso) {
             try {
+                // Solicitamos los datos del nuevo usuario
                 String nombre = solicitarDato("Nombre", "texto");
                 String apellido = solicitarDato("Apellido", "texto");
                 String email = solicitarDato("Email", "email");
@@ -265,13 +312,13 @@ public class InterfazUsuario {
                 Usuario usuario = null;
                 
                 if (tipoUsuario == 1) {
-                    // Crear cliente
+                    // Creamos el usuario de tipo cliente
                     String direccion = solicitarDato("Dirección", "texto");
                     String telefono = solicitarDato("Teléfono", "texto");
                     
                     usuario = new Cliente(nombre, apellido, email, usuarios.Rol.CLIENTE, 1, dni, 0, usuarios.clientes.MetodoPago.EFECTIVO, 0.0, direccion, telefono);
                 } else if (tipoUsuario == 2) {
-                    // Crear vendedor
+                    // Creamos el usuario de tipo vendedor
                     double salario = solicitarNumero("Salario base: $", "salario");
                     double comision = solicitarNumero("Comisión por venta (%): ", "comision");
                     
@@ -293,6 +340,10 @@ public class InterfazUsuario {
     }
     
     // ---------------------- METODOS DE UTILIDAD ----------------------
+    /**
+     *  Sirve para identificar la opción elegida por el usuario en los menúes
+     * @return la opcion elegida por el usuario o "-1" si la opcion no es válida
+     * */
     private int leerOpcion() {
         System.out.print("Seleccione una opción: ");
         try {
@@ -301,18 +352,28 @@ public class InterfazUsuario {
             return -1;
         }
     }
-    
+
+    /**
+     *  Sirve para que haya una pausa despues de determinadas acciones (como el registro o inicio de sesion de usuarios), con esto mejoramos el orden del sistema
+     * */
     private void pausar() {
         System.out.println("\nPresione Enter para continuar...");
         scanner.nextLine();
     }
-    
+
+    /**
+     *  Sirve para limpiar la terminal
+     * */
     private void limpiarPantalla() {
         // Limpiar pantalla
         System.out.print("\033[H\033[2J");
         System.out.flush();
     }
-    
+
+
+    /**
+     *  Termina la ejecución del sistema
+     * */
     private void salir() {
         System.out.println("¿Está seguro que desea salir? (s/n)");
         String respuesta = scanner.nextLine().toLowerCase();
@@ -325,6 +386,9 @@ public class InterfazUsuario {
     
     /**
      * Solicita un dato con validación y reintentos
+     * @param etiqueta etiqueta del dato, por ejemplo "nombre", "apellido", etc
+     * @param tipo tipo de dato
+     * @return dato solicitado
      */
     private String solicitarDato(String etiqueta, String tipo) {
         boolean datoValido = false;
@@ -372,6 +436,7 @@ public class InterfazUsuario {
     
     /**
      * Solicita una contraseña con validación
+     * @return contraseña validada
      */
     private String solicitarPassword() {
         boolean passwordValida = false;
@@ -403,6 +468,9 @@ public class InterfazUsuario {
     
     /**
      * Solicita un número con validación
+     * @param etiqueta etiqueta del numero solicitado
+     * @param tipo tipo de numero solicitado (ej: salario)
+     * @return numero solicitado
      */
     private double solicitarNumero(String etiqueta, String tipo) {
         boolean numeroValido = false;
@@ -476,7 +544,7 @@ public class InterfazUsuario {
     }
     
     /**
-     * Valida formato de email
+     * Validamos el formato de email
      */
     private boolean validarEmail(String email) {
         String regex = "^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,6}$";
@@ -484,7 +552,7 @@ public class InterfazUsuario {
     }
     
     /**
-     * Valida formato de DNI
+     * Validamos el formato de DNI
      */
     private boolean validarDNI(String dni) {
         return dni.matches("^\\d{8}$");
@@ -493,7 +561,7 @@ public class InterfazUsuario {
     // ---------------------- METODOS ----------------------
     
     /**
-     * Muestra información del cliente
+     * Muestra la información del cliente
      */
     private void mostrarInfoCliente() {
         Cliente cliente = (Cliente) sistema.getUsuarioActual();
@@ -502,7 +570,7 @@ public class InterfazUsuario {
     }
     
     /**
-     * Muestra información del vendedor
+     * Muestra la información del vendedor
      */
     private void mostrarInfoVendedor() {
         Vendedor vendedor = (Vendedor) sistema.getUsuarioActual();
@@ -517,15 +585,15 @@ public class InterfazUsuario {
         System.out.println("🛒 COMPRAR PRODUCTOS");
         System.out.println("═══════════════════════════════════");
         
-        // Mostrar saldo actual
+        // Mostramos el saldo actual del cliente
         Cliente cliente = (Cliente) sistema.getUsuarioActual();
         System.out.println("💰 Su saldo actual: $" + String.format("%.2f", cliente.getSaldo()));
         System.out.println("═══════════════════════════════════");
         
-        // Mostrar productos disponibles
+        // mostramos los productos disponibles
         sistema.mostrarProductosDisponibles();
         
-        // Verificar si hay productos disponibles antes de permitir comprar
+        // Verificamos si hay productos disponibles antes de permitir comprar
         if (!sistema.hayProductosDisponibles()) {
             System.out.println("\n❌ No hay productos disponibles en el stock.");
             System.out.println("No se puede realizar una compra sin productos disponibles.");
@@ -556,7 +624,7 @@ public class InterfazUsuario {
                 return;
             }
             
-            // Confirmar compra
+            // Confirmamos la  compra
             System.out.println("\n¿Confirma la compra? (s/n)");
             String confirmacion = scanner.nextLine().toLowerCase();
             
@@ -629,7 +697,7 @@ public class InterfazUsuario {
         System.out.println("💳 CAMBIAR MÉTODO DE PAGO");
         System.out.println("═══════════════════════════════════");
         
-        usuarios.clientes.Cliente cliente = (usuarios.clientes.Cliente) sistema.getUsuarioActual();
+        Cliente cliente = (Cliente) sistema.getUsuarioActual();
         System.out.println("Método actual: " + cliente.getMetodoPago());
         System.out.println("═══════════════════════════════════");
         System.out.println("1. 📱 Pago QR (5% descuento)");
@@ -646,19 +714,19 @@ public class InterfazUsuario {
             
             switch (opcion) {
                 case 1:
-                    cliente.cambiarMetodoPagoPorDefecto(usuarios.clientes.MetodoPago.QR);
+                    cliente.cambiarMetodoPagoPorDefecto(MetodoPago.QR);
                     break;
                 case 2:
-                    cliente.cambiarMetodoPagoPorDefecto(usuarios.clientes.MetodoPago.DEBITO);
+                    cliente.cambiarMetodoPagoPorDefecto(MetodoPago.DEBITO);
                     break;
                 case 3:
-                    cliente.cambiarMetodoPagoPorDefecto(usuarios.clientes.MetodoPago.BILLETERA_VIRTUAL);
+                    cliente.cambiarMetodoPagoPorDefecto(MetodoPago.BILLETERA_VIRTUAL);
                     break;
                 case 4:
-                    cliente.cambiarMetodoPagoPorDefecto(usuarios.clientes.MetodoPago.TARJETA_CREDITO);
+                    cliente.cambiarMetodoPagoPorDefecto(MetodoPago.TARJETA_CREDITO);
                     break;
                 case 5:
-                    cliente.cambiarMetodoPagoPorDefecto(usuarios.clientes.MetodoPago.EFECTIVO);
+                    cliente.cambiarMetodoPagoPorDefecto(MetodoPago.EFECTIVO);
                     break;
                 case 0:
                     System.out.println("❌ Operación cancelada.");
@@ -681,10 +749,10 @@ public class InterfazUsuario {
         System.out.println("💰 VENDER PRODUCTOS");
         System.out.println("═══════════════════════════════════");
         
-        // Mostrar productos disponibles
+        // Mostramos los productos disponibles
         sistema.mostrarProductosDisponibles();
         
-        // Verificar si hay productos disponibles antes de permitir procesar una venta
+        // Verificamos si hay productos disponibles antes de permitir procesar una venta
         if (!sistema.hayProductosDisponibles()) {
             System.out.println("\n❌ No hay productos disponibles en el stock.");
             System.out.println("No se puede procesar una venta sin productos disponibles.");
@@ -727,7 +795,7 @@ public class InterfazUsuario {
                 return;
             }
             
-            // Crear venta simple
+            // Creamos la venta
             var venta = sistema.crearVenta();
             if (venta != null) {
                 boolean exito = sistema.agregarProductoAVentaPorNombre(venta, nombreProducto, cantidad);
@@ -746,17 +814,20 @@ public class InterfazUsuario {
         
         pausar();
     }
-    
+
+    /**
+     *  Permite agregar productos al stock
+     * */
     private void agregarProductoAlStock() {
         System.out.println("➕ AGREGAR PRODUCTO AL STOCK");
         System.out.println("═══════════════════════════════════");
         
         try {
-            // Solicitar datos del producto
+            // Solicitamos los datos del producto
             String nombre = solicitarDato("Nombre del producto", "texto");
             String descripcion = solicitarDato("Descripción", "texto");
             
-            // Mostrar categorías disponibles
+            // Mostramos las categorías disponibles
             System.out.println("\n📋 CATEGORÍAS DISPONIBLES:");
             System.out.println("1. LAPTOP");
             System.out.println("2. SMARTPHONE");
@@ -768,17 +839,17 @@ public class InterfazUsuario {
             System.out.println("8. MONITOR");
             
             int categoriaOpcion = (int) solicitarNumero("Seleccione categoría (1-8): ", "categoria");
-            productos.CategoriaProducto categoria = null;
+            CategoriaProducto categoria = null;
             
             switch (categoriaOpcion) {
-                case 1: categoria = productos.CategoriaProducto.LAPTOP; break;
-                case 2: categoria = productos.CategoriaProducto.SMARTPHONE; break;
-                case 3: categoria = productos.CategoriaProducto.TABLET; break;
+                case 1: categoria = CategoriaProducto.LAPTOP; break;
+                case 2: categoria = CategoriaProducto.SMARTPHONE; break;
+                case 3: categoria = CategoriaProducto.TABLET; break;
                 case 4: categoria = CategoriaProducto.AUDIFONOS; break;
                 case 5: categoria = CategoriaProducto.SOFTWARE; break;
-                case 6: categoria = productos.CategoriaProducto.MOUSE; break;
-                case 7: categoria = productos.CategoriaProducto.TECLADO; break;
-                case 8: categoria = productos.CategoriaProducto.MONITOR; break;
+                case 6: categoria = CategoriaProducto.MOUSE; break;
+                case 7: categoria = CategoriaProducto.TECLADO; break;
+                case 8: categoria = CategoriaProducto.MONITOR; break;
                 default:
                     System.out.println("❌ Categoría no válida.");
                     return;
@@ -790,7 +861,7 @@ public class InterfazUsuario {
             String especificaciones = solicitarDato("Especificaciones técnicas", "texto");
             int cantidad = (int) solicitarNumero("Cantidad a agregar: ", "cantidad");
             
-            // Validar datos
+            // Validamos los datos
             if (precio <= 0) {
                 System.out.println("❌ El precio debe ser mayor a 0.");
                 return;
@@ -801,7 +872,7 @@ public class InterfazUsuario {
                 return;
             }
             
-            // Agregar producto al stock
+            // Agregamos los producto al stock
             boolean exito = sistema.agregarProductoAlStock(nombre, descripcion, categoria, precio, marca, modelo, especificaciones, cantidad);
             
             if (!exito) {
@@ -994,7 +1065,7 @@ public class InterfazUsuario {
                 return;
             }
             
-            // Buscar usuario para verificar su tipo
+            // Buscamos el usuario para verificar su tipo
             Usuario usuario = sistema.buscarUsuarioPorEmail(email);
             
             System.out.println("\n📝 Datos actuales del usuario:");
@@ -1002,7 +1073,7 @@ public class InterfazUsuario {
             System.out.println("\n═══════════════════════════════════");
             System.out.println("Ingrese los nuevos datos (presione Enter para mantener el valor actual):");
             
-            // Modificar datos básicos
+            // Modificamos sus datos básicos
             System.out.print("Nuevo nombre [" + usuario.getNombre() + "]: ");
             String nuevoNombre = scanner.nextLine().trim();
             if (nuevoNombre.isEmpty()) nuevoNombre = null;
@@ -1015,10 +1086,10 @@ public class InterfazUsuario {
             String nuevoDni = scanner.nextLine().trim();
             if (nuevoDni.isEmpty()) nuevoDni = null;
             
-            // Modificar datos básicos
+            // Modificamos sus datos básicos
             sistema.modificarUsuario(email, nuevoNombre, nuevoApellido, nuevoDni);
             
-            // Modificar datos específicos según el tipo de usuario
+            // Modificamos sus datos específicos según el tipo de usuario
             if (usuario instanceof Cliente) {
                 Cliente cliente = (Cliente) usuario;
                 System.out.print("Nueva dirección [" + (cliente.getDireccion() != null ? cliente.getDireccion() : "N/A") + "]: ");
@@ -1066,7 +1137,7 @@ public class InterfazUsuario {
                 sistema.modificarVendedor(email, nuevoSalario, nuevaComision);
             }
             
-            // Guardar todos los cambios al final
+            // Guardamos todos los cambios
             try {
                 sistema.guardarUsuarios();
             } catch (excepciones.ErrorPersistenciaException e) {
@@ -1077,7 +1148,7 @@ public class InterfazUsuario {
                 return;
             }
             
-            // Obtener el usuario actualizado para mostrar el nombre en el mensaje final
+            // Obtenemos el usuario actualizado para mostrar su nombre en el mensaje final
             Usuario usuarioActualizado = sistema.buscarUsuarioPorEmail(email);
             System.out.println("\n✅ Usuario modificado exitosamente: " + usuarioActualizado.getNombre() + " " + usuarioActualizado.getApellido());
             

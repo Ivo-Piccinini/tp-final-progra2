@@ -16,27 +16,24 @@ public class Credenciales {
     public String getEmail() {
         return email;
     }
-    
     public void setEmail(String email) {
         this.email = email;
     }
-    
     public String getPassword() {
         return password;
     }
-    
     public void setPassword(String password) {
         this.password = password;
     }
     
     // ---------------------- MÉTODOS DE AUTENTICACIÓN ----------------------
+    /**
+     * Verifica que la contraseña ingresada en el login sea la misma que la contraseña del usuario
+     * @return Verdadero si la contraseña es la misma, Falso si no
+     */
     public boolean verificarPassword(String passwordIngresada) {
-        
-        if (password.equals(passwordIngresada)) {
-            return true;
-        } else {
-            return false;
-        }
+
+        return password.equals(passwordIngresada);
     }
     
     // ---------------------- MÉTODOS SOBREESCRITOS ----------------------

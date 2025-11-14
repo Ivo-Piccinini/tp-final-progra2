@@ -10,28 +10,7 @@ import java.util.function.Predicate;
  * de repositorio (búsqueda, filtrado) sobre colecciones.
  */
 public class RepositorioGenerico {
-    
-    /**
-     * Busca una entidad en una lista por su ID.
-     * 
-     * @param <T> El tipo de entidad que implementa IEntidad
-     * @param <ID> El tipo del identificador
-     * @param lista La lista donde buscar
-     * @param id El ID a buscar
-     * @return La entidad encontrada, o null si no existe
-     */
-    public static <T, ID> T buscarPorId(List<T> lista, ID id, Function<T, ID> obtenerId) {
-        if (lista == null || id == null || obtenerId == null) {
-            return null;
-        }
-        
-        for (T entidad : lista) {
-            if (entidad != null && obtenerId.apply(entidad).equals(id)) {
-                return entidad;
-            }
-        }
-        return null;
-    }
+
     
     /**
      * Busca una entidad en una lista por su nombre (búsqueda case-insensitive).

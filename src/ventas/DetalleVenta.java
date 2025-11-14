@@ -2,6 +2,8 @@ package ventas;
 
 import productos.Producto;
 
+import java.util.Objects;
+
 /**
  * Clase que representa un detalle individual de una venta.
  * Contiene información sobre un producto específico y su cantidad.
@@ -47,24 +49,7 @@ public class DetalleVenta {
     public double getSubtotal() {
         return subtotal;
     }
-    
-    // ---------------------- MÉTODOS DE GESTIÓN ----------------------
-    public void actualizarPrecio(double nuevoPrecio) {
-        if (nuevoPrecio < 0) {
-            throw new IllegalArgumentException("El precio no puede ser negativo.");
-        }
-        this.precioUnitario = nuevoPrecio;
-        this.subtotal = precioUnitario * cantidad;
-    }
-    
-    public void aplicarDescuento(double porcentajeDescuento) {
-        if (porcentajeDescuento < 0 || porcentajeDescuento > 100) {
-            throw new IllegalArgumentException("El porcentaje de descuento debe estar entre 0 y 100.");
-        }
-        double descuento = precioUnitario * (porcentajeDescuento / 100.0);
-        this.precioUnitario = precioUnitario - descuento;
-        this.subtotal = precioUnitario * cantidad;
-    }
+
     
     // ---------------------- MÉTODOS SOBREESCRITOS ----------------------
     @Override
@@ -77,7 +62,7 @@ public class DetalleVenta {
         if (this == obj) return true;
         if (obj == null || getClass() != obj.getClass()) return false;
         DetalleVenta that = (DetalleVenta) obj;
-        return producto.getId() == that.producto.getId();
+        return Objects.equals(producto.getId(), that.producto.getId());
     }
     
     @Override

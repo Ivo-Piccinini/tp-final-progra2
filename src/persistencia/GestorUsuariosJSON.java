@@ -3,6 +3,7 @@ package persistencia;
 import org.json.JSONArray;
 import org.json.JSONObject;
 import org.json.JSONException;
+import org.json.JSONTokener;
 import usuarios.Credenciales;
 import usuarios.Rol;
 import usuarios.SistemaAutenticacion;
@@ -12,14 +13,28 @@ import usuarios.vendedores.Vendedor;
 import usuarios.clientes.MetodoPago;
 import excepciones.ErrorPersistenciaException;
 
+import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
 import java.lang.reflect.Field;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+/**
+ * ELECCION DE COLECCIONES:
+ *
+ * - ArrayList para listas de usuarios: Usamos ArrayList cuando necesitamos guardar y recorrer
+ *   usuarios en orden.
+ *
+ * - HashMap para credenciales: Usamos HashMap porque necesitamos buscar credenciales rápidamente
+ *   por el email del usuario sin tener que revisar todas las credenciales una por una.
+ *
+ * - ArrayList para historiales (compras y ventas): Usamos ArrayList para mantener listas de
+ *   compras o ventas en orden cronológico.
+ */
 public class GestorUsuariosJSON {
     private static final String ARCHIVO_USUARIOS = "data/usuarios.json";
     
@@ -27,15 +42,18 @@ public class GestorUsuariosJSON {
 
     /**
      * Guarda todos los usuarios del sistema en un archivo JSON
+     * @param sistemaAutenticacion instancia de "SistemaAutenticación" donde están los usuarios autenticados
+     * @param nombreArchivo nombre del archivo donde se van a guardar los usuarios
+     * @throws ErrorPersistenciaException si no se pueden guardar los usuarios en el archivo
      */
     public void guardarUsuarios(SistemaAutenticacion sistemaAutenticacion, String nombreArchivo) throws ErrorPersistenciaException {
         try {
             ArrayList<Usuario> usuarios = (ArrayList<Usuario>) sistemaAutenticacion.listarUsuarios();
             JSONObject jsonObject = new JSONObject();
             jsonObject.put("usuarios", serializarLista(usuarios, sistemaAutenticacion));
-            jsonObject.put("fechaActualizacion", java.time.LocalDateTime.now().toString());
+            jsonObject.put("fechaActualizacion", LocalDateTime.now().toString());
             jsonObject.put("totalUsuarios", usuarios.size());
-            // Guardar el contador actual para mantener la secuencia de IDs
+            // Guardamos el contador actual para mantener la secuencia de IDs
             jsonObject.put("contadorUsuarios", Usuario.getContador());
             
             OperacionesLectoEscritura.grabar(nombreArchivo, jsonObject);
@@ -50,13 +68,15 @@ public class GestorUsuariosJSON {
 
     /**
      * Carga todos los usuarios desde un archivo JSON
+     * @param nombreArchivo nombre del archivo de donde se cargarán los usuarios
+     * @return una lista con los usuarios que contiene el archivo
      */
     public ArrayList<Usuario> cargarUsuarios(String nombreArchivo) {
         ArrayList<Usuario> usuarios = new ArrayList<>();
         int maxId = 0;
         try {
             FileReader fileReader = new FileReader(nombreArchivo);
-            org.json.JSONTokener tokener = new org.json.JSONTokener(fileReader);
+            JSONTokener tokener = new JSONTokener(fileReader);
             JSONObject jsonObject = new JSONObject(tokener);
             
             JSONArray usuariosArray = jsonObject.getJSONArray("usuarios");
@@ -66,19 +86,19 @@ public class GestorUsuariosJSON {
                 Usuario usuario = deserializarUsuario(usuarioJson);
                 if (usuario != null) {
                     usuarios.add(usuario);
-                    // Encontrar el ID máximo para actualizar el contador
+                    // Encontramos el ID máximo para actualizar el contador
                     if (usuario.getId() > maxId) {
                         maxId = usuario.getId();
                     }
                 }
             }
             
-            // Restaurar el contador: usar el valor guardado si existe, sino usar el máximo ID encontrado
+            // Restauramos el contador: usar el valor guardado si existe, sino usar el máximo ID encontrado
             if (jsonObject.has("contadorUsuarios")) {
                 int contadorGuardado = jsonObject.getInt("contadorUsuarios");
                 Usuario.setContador(contadorGuardado);
             } else {
-                // Si no hay contador guardado, usar el máximo ID encontrado
+                // Si no hay contador guardado, usamos el máximo ID encontrado
                 Usuario.setContador(maxId);
             }
             
@@ -91,13 +111,15 @@ public class GestorUsuariosJSON {
     
     /**
      * Carga usuarios y credenciales desde un archivo JSON
+     * @param nombreArchivo nombre del archivo del cual cargaremos los usuarios y credenciales al sistema
+     * @return un map que contiene los usuarios y credenciales
      */
     public Map<String, Credenciales> cargarUsuariosConCredenciales(String nombreArchivo) {
-        Map<String, usuarios.Credenciales> credenciales = new HashMap<>();
+        Map<String, Credenciales> credenciales = new HashMap<>();
         
         try {
             FileReader fileReader = new FileReader(nombreArchivo);
-            org.json.JSONTokener tokener = new org.json.JSONTokener(fileReader);
+            JSONTokener tokener = new JSONTokener(fileReader);
             JSONObject jsonObject = new JSONObject(tokener);
             
             JSONArray usuariosArray = jsonObject.getJSONArray("usuarios");
@@ -107,7 +129,7 @@ public class GestorUsuariosJSON {
                 String email = usuarioJson.getString("email");
                 String password = usuarioJson.optString("password", "temp123");
                 
-                usuarios.Credenciales credencial = new usuarios.Credenciales(email, password);
+                Credenciales credencial = new Credenciales(email, password);
                 credenciales.put(email, credencial);
             }
             
@@ -121,6 +143,9 @@ public class GestorUsuariosJSON {
 
     /**
      * Serializa una lista de usuarios a JSONArray
+     * @param usuarios usuarios a serializar
+     * @param sistemaAutenticacion credenciales de los usuarios a serializar
+     * @return un JSONArray con los usuarios serializados
      */
     public JSONArray serializarLista(ArrayList<Usuario> usuarios, SistemaAutenticacion sistemaAutenticacion) {
         JSONArray jsonArray = new JSONArray();
@@ -139,11 +164,15 @@ public class GestorUsuariosJSON {
 
     /**
      * Serializa un usuario individual a JSONObject
+     * @param usuario usuario a serializar
+     * @param sistemaAutenticacion credenciales del usuario a serializar
+     * @throws JSONException si hay algun error relacionado al uso de JSON
+     * @return un JSONObject con el usuario serializado
      */
     private JSONObject serializarUsuario(Usuario usuario, SistemaAutenticacion sistemaAutenticacion) throws JSONException {
         JSONObject usuarioJson = new JSONObject();
         usuarioJson.put("id", usuario.getId());
-        usuarioJson.put("nombre", usuario.getNombre() != null ? usuario.getNombre() : "");
+        usuarioJson.put("nombre", usuario.getNombre() != null ? usuario.getNombre() : ""); // Para cada campo comprobamos que el dato no sea null, en el caso de que lo sea guarda como String vacío
         usuarioJson.put("apellido", usuario.getApellido() != null ? usuario.getApellido() : "");
         usuarioJson.put("email", usuario.getEmail() != null ? usuario.getEmail() : "");
         usuarioJson.put("rol", usuario.getRol() != null ? usuario.getRol().toString() : "");
@@ -151,13 +180,13 @@ public class GestorUsuariosJSON {
         usuarioJson.put("dni", usuario.getDni() != null ? usuario.getDni() : "");
         usuarioJson.put("fechaRegistro", usuario.getFechaRegistro() != null ? usuario.getFechaRegistro().toString() : "");
         
-        // Obtener y guardar la contraseña
+        // Obtenemos y guardamos la contraseña
         try {
-            // Acceder a las credenciales del sistema de autenticación
+            // Accedemos a las credenciales del sistema de autenticación
             Field credencialesField = SistemaAutenticacion.class.getDeclaredField("credenciales");
             credencialesField.setAccessible(true);
             @SuppressWarnings("unchecked")
-            Map<String, usuarios.Credenciales> credenciales = (Map<String, usuarios.Credenciales>) credencialesField.get(sistemaAutenticacion);
+            Map<String, Credenciales> credenciales = (Map<String, Credenciales>) credencialesField.get(sistemaAutenticacion);
             
             Credenciales credencial = credenciales.get(usuario.getEmail());
             if (credencial != null) {
@@ -214,6 +243,8 @@ public class GestorUsuariosJSON {
 
     /**
      * Deserializa un JSONObject a un Usuario
+     * @param usuarioJson usuario serializado que vamos a deserializar
+     * @return usuario ya deserializado
      */
     private Usuario deserializarUsuario(JSONObject usuarioJson) {
         try {
@@ -233,10 +264,9 @@ public class GestorUsuariosJSON {
                 String direccion = usuarioJson.optString("direccion", "");
                 String telefono = usuarioJson.optString("telefono", "");
                 
-                Cliente cliente = new Cliente(id, nombre, apellido, email, rol, estado, dni,
-                        cantProductosComprados, metodoPago, saldo, direccion, telefono);
+                Cliente cliente = new Cliente(id, nombre, apellido, email, rol, estado, dni,cantProductosComprados, metodoPago, saldo, direccion, telefono);
                 
-                // Cargar historial de compras
+                // Cargamos el historial de compras
                 JSONArray historialArray = usuarioJson.optJSONArray("historialCompras");
                 if (historialArray != null) {
                     for (int i = 0; i < historialArray.length(); i++) {
@@ -256,7 +286,7 @@ public class GestorUsuariosJSON {
                 vendedor.setComisionPorVenta(comision);
                 vendedor.setTotalComisiones(totalComisiones);
                 
-                // Restaurar historial de ventas
+                // Restauramos el historial de ventas
                 if (usuarioJson.has("ventasRealizadas")) {
                     JSONArray ventasArray = usuarioJson.getJSONArray("ventasRealizadas");
                     List<String> historialVentas = new ArrayList<>();
@@ -278,8 +308,9 @@ public class GestorUsuariosJSON {
 
     /**
      * Verifica si existe el archivo de usuarios
+     * @return true si existe el archivo de usuarios, false si no
      */
     public boolean existeArchivoUsuarios() {
-        return new java.io.File(ARCHIVO_USUARIOS).exists();
+        return new File(ARCHIVO_USUARIOS).exists();
     }
 }

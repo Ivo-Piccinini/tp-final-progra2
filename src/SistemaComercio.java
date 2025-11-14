@@ -23,6 +23,16 @@ import java.util.InputMismatchException;
 
 /**
  * Clase central que gestiona todo el sistema de comercio de tecnología.
+ * 
+ * ELECCION DE COLECCIONES:
+ *
+ * - ArrayList para ventas: Usamos ArrayList para mantener todas las ventas del sistema
+ *   en el orden en que se van creando. Esto nos permite recorrer todas las ventas en
+ *   secuencia para consultas y reportes.
+ *
+ * - ArrayList para listas temporales de clientes: Usamos ArrayList cuando necesitamos
+ *   crear listas temporales de clientes para mostrar opciones o procesar información,
+ *   ya que podemos agregar elementos y recorrerlos en orden.
  */
 public class SistemaComercio {
     private SistemaAutenticacion sistemaAutenticacion;
@@ -39,7 +49,7 @@ public class SistemaComercio {
         this.ventas = new ArrayList<>();
         this.fechaInicioSistema = LocalDateTime.now();
         
-        // Cargar stock desde archivo JSON
+        // Cargamos el stock desde archivo JSON
         cargarStockDesdeArchivo();
         
         System.out.println("🚀 SISTEMA DE COMERCIO DE TECNOLOGÍA INICIADO");
@@ -49,6 +59,13 @@ public class SistemaComercio {
     }
     
     // ---------------------- METODOS DE AUTENTICACION ----------------------
+
+    /**
+     *  Realiza el inicio de sesión del sistema
+     * @param email email del usuario que quiere ingresar al sistema
+     * @param password contraseña del usuario que quiere ingresar al sistema
+     * @return true si el usuario logra iniciar sesión, false si no
+     * */
     public boolean login(String email, String password) {
         try {
             return sistemaAutenticacion.login(email, password);
@@ -57,11 +74,21 @@ public class SistemaComercio {
             return false;
         }
     }
-    
+
+
+    /**
+     *  Realiza el cierre de sesión del usuario
+     * */
     public void logout() {
         sistemaAutenticacion.logout();
     }
-    
+
+    /**
+     *  Realiza el registro de un usuario en el sistema
+     * @param usuario usuario a registrar en el sistema
+     * @param password contraseña del usuario a registrar en el sistema
+     * @return true si el usuario es registrado en el sistema, false si no
+     * */
     public boolean registrarUsuario(Usuario usuario, String password) {
         try {
             return sistemaAutenticacion.registrarUsuario(usuario, password);
@@ -73,15 +100,27 @@ public class SistemaComercio {
             return false;
         }
     }
-    
+
+    /**
+     *  Obtiene el usuario actual
+     * @return el usuario que esta utilizando el sistema en ese momento
+     * */
     public Usuario getUsuarioActual() {
         return sistemaAutenticacion.getUsuarioActual();
     }
-    
+
+    /**
+     *  indica si el usuario que esta usando el sistema está logueado
+     * @return true si el usuario está logueado, false si no lo está
+     * */
     public boolean estaLogueado() {
         return sistemaAutenticacion.estaLogueado();
     }
-    
+
+    /**
+     *  Indica si hay usuarios registrados en el sisitema
+     * @return true si hay usuarios registrados en el sistema, false si no
+     * */
     public boolean hayUsuariosRegistrados() {
         return sistemaAutenticacion.hayUsuariosRegistrados();
     }
@@ -114,11 +153,17 @@ public class SistemaComercio {
     }
     
     // ---------------------- METODOS ----------------------
-    
+
+    /**
+     *  Muestra el inventario del sistema
+     * */
     public void mostrarInventario() {
         stock.mostrarInventario();
     }
-    
+
+    /**
+     *  Muestra solo los productos disponibles del sistema
+     * */
     public void mostrarProductosDisponibles() {
         stock.mostrarProductosDisponibles();
     }
@@ -134,6 +179,12 @@ public class SistemaComercio {
     
     /**
      * Permite a un cliente comprar productos directamente por nombre
+     * @param nombreProducto nombre del producto que el usuario quiere comprar
+     * @param cantidad cantidad del producto que el usuario va a comprar
+     * @return true si el usuario logra comprar el producto
+     * @throws ProductoNoEncontradoException si no se encuentra el producto
+     * @throws StockInsuficienteException si no hay stock suficiente para realizar la compra
+     * @throws SaldoInsuficienteException si el usuario no tiene suficiente saldo para realizar la compra
      */
     public boolean comprarProductoPorNombre(String nombreProducto, int cantidad) throws ProductoNoEncontradoException, StockInsuficienteException, SaldoInsuficienteException {
         if (!estaLogueado()) {
@@ -169,20 +220,20 @@ public class SistemaComercio {
         
         double subtotal = producto.getPrecio() * cantidad;
         
-        // Mostrar descuentos disponibles
+        // Mostramos los descuentos disponibles
         DescuentoMetodoPago.mostrarDescuentosDisponibles();
         
-        // Seleccionar método de pago
+        // Seleccionamos el método de pago
         MetodoPago metodoPagoSeleccionado = seleccionarMetodoPago(cliente);
         if (metodoPagoSeleccionado == null) {
             throw new IllegalStateException("Compra cancelada por el usuario.");
         }
         
-        // Calcular descuento y total final
+        // Calculamos el descuento y el monto total final
         double descuento = DescuentoMetodoPago.calcularDescuento(subtotal, metodoPagoSeleccionado);
         double totalCompra = DescuentoMetodoPago.calcularMontoFinal(subtotal, metodoPagoSeleccionado);
         
-        // Mostrar resumen de la compra
+        // Mostramos el resumen de la compra
         System.out.println("\n🧾 RESUMEN DE COMPRA");
         System.out.println("═══════════════════════════════════");
         System.out.println("📱 Producto: " + producto.getNombre());
@@ -196,15 +247,10 @@ public class SistemaComercio {
         System.out.println("═══════════════════════════════════");
         
         if (cliente.getSaldo() < totalCompra) {
-            throw new SaldoInsuficienteException(
-                "Saldo insuficiente. Saldo actual: $" + String.format("%.2f", cliente.getSaldo()) + 
-                ", Total de la compra: $" + String.format("%.2f", totalCompra),
-                cliente.getSaldo(),
-                totalCompra
-            );
+            throw new SaldoInsuficienteException("Saldo insuficiente. Saldo actual: $" + String.format("%.2f", cliente.getSaldo()) + ", Total de la compra: $" + String.format("%.2f", totalCompra),cliente.getSaldo(),totalCompra);
         }
         
-        // Procesar la compra
+        // Procesamos la compra
         try {
             stock.eliminarProducto(productoId, cantidad);
         } catch (ProductoNoEncontradoException | StockInsuficienteException e) {
@@ -212,17 +258,17 @@ public class SistemaComercio {
             throw e;
         }
         
-        // Actualizar saldo del cliente
+        // Actualizamos el saldo del cliente
         cliente.setSaldo(cliente.getSaldo() - totalCompra);
         
-        // Registrar la compra con descuento
+        // Registramos la compra con descuento
         String descripcionCompra = producto.getNombre() + " x" + cantidad + " = $" + String.format("%.2f", totalCompra);
         if (descuento > 0) {
             descripcionCompra += " (Descuento: $" + String.format("%.2f", descuento) + ")";
         }
         cliente.agregarCompra(descripcionCompra);
         
-        // Guardar cambios en archivo JSON
+        // Guardamos los cambios en archivo JSON
         guardarStockEnArchivo();
         try {
             sistemaAutenticacion.guardarUsuarios();
@@ -244,6 +290,8 @@ public class SistemaComercio {
     
     /**
      * Permite a un cliente agregar saldo a su cuenta
+     * @param monto monto a agregar al saldo del cliente
+     * @return true si el cliente logra agregar saldo a su cuenta, false si no
      */
     public boolean agregarSaldo(double monto) {
         if (!estaLogueado()) {
@@ -265,7 +313,7 @@ public class SistemaComercio {
         Cliente cliente = (Cliente) usuario;
         cliente.setSaldo(cliente.getSaldo() + monto);
         
-        // Guardar cambios en archivo JSON
+        // Guardamos los cambios en archivo JSON
         try {
             sistemaAutenticacion.guardarUsuarios();
         } catch (ErrorPersistenciaException e) {
@@ -300,6 +348,8 @@ public class SistemaComercio {
     
     /**
      * Permite al cliente seleccionar el método de pago
+     * @param cliente cliente que va a actualizar su método de pago
+     * @return método de pago elegido por el cliente o null
      */
     private MetodoPago seleccionarMetodoPago(Cliente cliente) {
         Scanner scanner = new Scanner(System.in);
@@ -353,6 +403,10 @@ public class SistemaComercio {
     }
     
     // ---------------------- METODOS DE GESTION DE VENTAS ----------------------
+    /**
+     *  Permite crear una venta
+     * @return venta creada
+     * */
     public Venta crearVenta() {
         if (!estaLogueado()) {
             System.out.println("❌ Error: Debe estar logueado para crear una venta.");
@@ -365,7 +419,7 @@ public class SistemaComercio {
             return null;
         }
         
-        // Seleccionar cliente existente
+        // Seleccionamos un cliente existente
         Cliente clienteSeleccionado = seleccionarCliente();
         if (clienteSeleccionado == null) {
             System.out.println("❌ Error: No se pudo seleccionar un cliente.");
@@ -374,7 +428,7 @@ public class SistemaComercio {
         
         Vendedor vendedor = (Vendedor) usuario;
         
-        // Seleccionar método de pago
+        // Seleccionamos el método de pago
         MetodoPago metodoPago = seleccionarMetodoPago(clienteSeleccionado);
         if (metodoPago == null) {
             System.out.println("❌ Error: No se pudo seleccionar un método de pago.");
@@ -390,11 +444,12 @@ public class SistemaComercio {
     
     /**
      * Permite seleccionar un cliente existente de la lista de usuarios registrados
+     * @return cliente existente seleccionado
      */
     private Cliente seleccionarCliente() {
         Scanner scanner = new Scanner(System.in);
         
-        // Obtener todos los clientes registrados
+        // Obtenemos todos los clientes registrados
         List<Cliente> clientes = new ArrayList<>();
         for (Usuario usuario : sistemaAutenticacion.listarUsuarios()) {
             if (usuario instanceof Cliente) {
@@ -407,7 +462,7 @@ public class SistemaComercio {
             return null;
         }
         
-        // Mostrar lista de clientes
+        // Mostramos la lista de clientes
         System.out.println("👥 SELECCIONAR CLIENTE");
         System.out.println("═══════════════════════════════════");
         for (int i = 0; i < clientes.size(); i++) {
@@ -417,15 +472,15 @@ public class SistemaComercio {
         }
         System.out.println("═══════════════════════════════════");
         
-        // Solicitar selección
+        // Solicitamos la selección
         while (true) {
             try {
                 System.out.print("Seleccione el cliente (número) o 0 para ver detalles: ");
                 int opcion = scanner.nextInt();
-                scanner.nextLine(); // Limpiar buffer
+                scanner.nextLine();
                 
                 if (opcion == 0) {
-                    // Mostrar detalles de todos los clientes
+                    // Mostramos los detalles de todos los clientes
                     mostrarDetallesClientes(clientes);
                 } else if (opcion >= 1 && opcion <= clientes.size()) {
                     Cliente clienteSeleccionado = clientes.get(opcion - 1);
@@ -445,6 +500,7 @@ public class SistemaComercio {
 
     /**
      * Muestra detalles completos de todos los clientes
+     * @param clientes clientes del sistema
      */
     private void mostrarDetallesClientes(List<Cliente> clientes) {
         System.out.println("📋 DETALLES COMPLETOS DE CLIENTES");
@@ -466,35 +522,12 @@ public class SistemaComercio {
         System.out.println("═══════════════════════════════════════════════════════════════");
     }
     
-    public boolean agregarProductoAVenta(Venta venta, int productoId, int cantidad) {
-        if (venta == null) {
-            System.out.println("❌ Error: La venta no puede ser null.");
-            return false;
-        }
-        
-        Producto producto = stock.obtenerProducto(productoId);
-        if (producto == null) {
-            System.out.println("❌ Error: Producto no encontrado.");
-            return false;
-        }
-        
-        try {
-            boolean resultado = venta.agregarProducto(producto, cantidad, stock);
-            if (resultado) {
-                System.out.println("✅ Producto agregado a la venta: " + producto.getNombre() + " x" + cantidad);
-            }
-            return resultado;
-        } catch (StockInsuficienteException e) {
-            System.out.println("❌ Error: " + e.getMessage());
-            return false;
-        } catch (IllegalArgumentException e) {
-            System.out.println("❌ Error: " + e.getMessage());
-            return false;
-        }
-    }
-    
     /**
      * Agrega un producto a una venta buscándolo por nombre
+     * @param venta venta a la cual se le agregará un producto
+     * @param cantidad cantidad del producto que se agregará a la venta
+     * @param nombreProducto nombre del producto que se agregará a la venta
+     * @return true si se pudo agregar el producto a la venta, false si no
      */
     public boolean agregarProductoAVentaPorNombre(Venta venta, String nombreProducto, int cantidad) {
         if (venta == null) {
@@ -530,6 +563,15 @@ public class SistemaComercio {
     
     /**
      * Permite a un vendedor agregar un nuevo producto al stock
+     * @param nombre nombre del producto que se agregará al stock
+     * @param descripcion descripcion del producto que se agregará al stock
+     * @param categoria categoría del producto que se agregará al stock
+     * @param precio precio del producto que se agregará al stock
+     * @param marca marca dl producto que se agregara al stock
+     * @param modelo modelo del producto que se agregaa al stock
+     * @param especificaciones especificaciones del producto que se agregará al stock
+     * @param cantidad cantidad del producto que se agregará al stock
+     * @return true si el producto pudo agregarse al stock, false si no
      */
     public boolean agregarProductoAlStock(String nombre, String descripcion, CategoriaProducto categoria, double precio, String marca, String modelo, String especificaciones, int cantidad) {
         if (!(getUsuarioActual() instanceof Vendedor)) {
@@ -538,13 +580,13 @@ public class SistemaComercio {
         }
         
         try {
-            // Crear el nuevo producto
+            // Creamos el nuevo producto
             Producto nuevoProducto = new Producto(nombre, descripcion, categoria, precio, marca, modelo, especificaciones);
             
-            // Agregar al stock
+            // Agregamos el nuevo producto al stock
             stock.agregarProducto(nuevoProducto, cantidad);
             
-            // Guardar en archivo JSON
+            // Guardamos el nuevo producto en el archivo
             guardarStockEnArchivo();
             
             System.out.println("✅ Producto agregado exitosamente al stock:");
@@ -556,7 +598,13 @@ public class SistemaComercio {
             return false;
         }
     }
-    
+
+
+    /**
+     *  Permite procesar la venta
+     * @param venta venta a procesar
+     * @return true si la venta pudo procesarse, false si no
+     * */
     public boolean procesarVenta(Venta venta) {
         if (venta == null) {
             System.out.println("❌ Error: La venta no puede ser null.");
@@ -566,7 +614,7 @@ public class SistemaComercio {
         try {
             boolean resultado = venta.procesarVenta(stock);
             if (resultado) {
-                // Guardar cambios en archivo JSON
+                // Guardamos los cambios en el archivo
                 guardarStockEnArchivo();
                 try {
                     sistemaAutenticacion.guardarUsuarios();
@@ -588,7 +636,11 @@ public class SistemaComercio {
             return false;
         }
     }
-    
+
+
+    /**
+     *  Mostramos el historial de ventas del vendedor actual
+     * */
     public void mostrarVentas() {
         if (!estaLogueado()) {
             System.out.println("❌ Error: Debe estar logueado para ver las ventas.");
@@ -621,8 +673,6 @@ public class SistemaComercio {
         System.out.println("═══════════════════════════════════");
     }
     
-    // ---------------------- METODOS DE GESTION DE USUARIOS (VENDEDOR) ----------------------
-    
     /**
      * Lista todos los usuarios del sistema
      */
@@ -648,6 +698,8 @@ public class SistemaComercio {
     
     /**
      * Busca un usuario por email
+     * @param email email del usuario a buscar
+     * @return usuario buscado por email
      */
     public Usuario buscarUsuarioPorEmail(String email) throws UsuarioNoEncontradoException {
         return sistemaAutenticacion.buscarUsuarioPorEmail(email);
@@ -655,6 +707,8 @@ public class SistemaComercio {
     
     /**
      * Da de baja lógica a un usuario (estado = 0)
+     * @param email email del usuario que será dado de baja
+     * @return true si el usuario fue dado de baja, false si no
      */
     public boolean darBajaUsuario(String email) throws UsuarioNoEncontradoException {
         try {
@@ -667,6 +721,8 @@ public class SistemaComercio {
     
     /**
      * Reactiva un usuario (estado = 1)
+     * @param email email del usuario a reactivar
+     * @return true si el usuario fue reactivado, false si no
      */
     public boolean reactivarUsuario(String email) throws UsuarioNoEncontradoException {
         return sistemaAutenticacion.reactivarUsuario(email);
@@ -674,17 +730,26 @@ public class SistemaComercio {
     
     /**
      * Modifica los datos básicos de un usuario
+     * @param email email del usuario a modificar
+     * @param nuevoNombre nuevo nombre del usuario
+     * @param nuevoApellido nuevo apellido del usuario
+     * @param nuevoDni muevo dni del usuario
+     * @throws UsuarioNoEncontradoException si el usuario no existe
+     * @return true si se logra modificar el usuario, false si no
      */
-    public boolean modificarUsuario(String email, String nuevoNombre, String nuevoApellido, String nuevoDni) 
-            throws UsuarioNoEncontradoException {
+    public boolean modificarUsuario(String email, String nuevoNombre, String nuevoApellido, String nuevoDni) throws UsuarioNoEncontradoException {
         return sistemaAutenticacion.modificarUsuario(email, nuevoNombre, nuevoApellido, nuevoDni);
     }
     
     /**
      * Modifica datos específicos de un Cliente
+     * @param email email del cliente a modificar
+     * @param nuevaDireccion nueva direccion del cliente
+     * @param nuevoTelefono nuevo teléfono del cliente
+     * @throws UsuarioNoEncontradoException si el cliente no es encontrado
+     * @return true si el cliente pudo ser modificado, false si no
      */
-    public boolean modificarCliente(String email, String nuevaDireccion, String nuevoTelefono) 
-            throws UsuarioNoEncontradoException {
+    public boolean modificarCliente(String email, String nuevaDireccion, String nuevoTelefono) throws UsuarioNoEncontradoException {
         try {
             return sistemaAutenticacion.modificarCliente(email, nuevaDireccion, nuevoTelefono);
         } catch (IllegalArgumentException e) {
@@ -695,9 +760,13 @@ public class SistemaComercio {
     
     /**
      * Modifica datos específicos de un Vendedor
+     * @param email email del vendedor a modificar
+     * @param nuevoSalario nuevo salario del vendedor
+     * @param nuevaComision nueva comisión del vendedor
+     * @throws UsuarioNoEncontradoException si el vendedor no es encontrado
+     * @return true si el vendedor pudo ser modificado, false si no
      */
-    public boolean modificarVendedor(String email, Double nuevoSalario, Double nuevaComision) 
-            throws UsuarioNoEncontradoException {
+    public boolean modificarVendedor(String email, Double nuevoSalario, Double nuevaComision) throws UsuarioNoEncontradoException {
         try {
             return sistemaAutenticacion.modificarVendedor(email, nuevoSalario, nuevaComision);
         } catch (IllegalArgumentException e) {
@@ -707,7 +776,8 @@ public class SistemaComercio {
     }
     
     /**
-     * Guarda los usuarios en el archivo JSON
+     * Guarda los usuarios en el archivo
+     * @throws ErrorPersistenciaException si los usuarios no pudieron ser guardados en el archivo
      */
     public void guardarUsuarios() throws ErrorPersistenciaException {
         sistemaAutenticacion.guardarUsuarios();

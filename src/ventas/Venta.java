@@ -16,6 +16,13 @@ import java.util.*;
 /**
  * Clase que representa una venta en el sistema.
  * Incluye información del cliente, vendedor, productos y totales.
+ * 
+ * ELECCION DE COLECCIONES:
+ *
+ * - ArrayList para detalles de venta: Usamos ArrayList para mantener los productos
+ *   de la venta en el orden en que se van agregando. Esto nos permite recorrer todos
+ *   los productos de la venta en secuencia para calcular totales, mostrar información
+ *   y procesar la venta.
  */
 public class Venta implements IEntidad<Integer> {
     private int id;
@@ -103,6 +110,15 @@ public class Venta implements IEntidad<Integer> {
     }
     
     // ---------------------- MÉTODOS DE GESTIÓN ----------------------
+
+    /**
+     *  Agrega un producto a la venta
+     * @param producto producto a agregar
+     * @param cantidad cantidad del producto a agregar
+     * @param stock stock del producto (para validar si hay stock de ese producto antes de agregar a la venta)
+     * @throws StockInsuficienteException en el caso de que no haya stock del producto
+     * @return true si se pudo agregar el producto
+     */
     public boolean agregarProducto(Producto producto, int cantidad, Stock stock) throws StockInsuficienteException {
         if (producto == null) {
             throw new IllegalArgumentException("El producto no puede ser null.");
@@ -114,17 +130,17 @@ public class Venta implements IEntidad<Integer> {
             throw new IllegalArgumentException("El producto no está activo.");
         }
         
-        // Verificar si el producto ya está en la venta
+        // Verificamos si el producto ya está en la venta
         int cantidadTotalNecesaria = cantidad;
         for (DetalleVenta detalle : detalles) {
-            if (detalle.getProducto().getId() == producto.getId()) {
+            if (Objects.equals(detalle.getProducto().getId(), producto.getId())) {
                 // Si el producto ya está en la venta, calcular la cantidad total necesaria
                 cantidadTotalNecesaria = detalle.getCantidad() + cantidad;
                 break;
             }
         }
         
-        // Verificar stock disponible para la cantidad total necesaria
+        // Verificamos el stock disponible para la cantidad total necesaria
         if (!stock.hayStock(producto.getId(), cantidadTotalNecesaria)) {
             int stockDisponible = stock.obtenerCantidad(producto.getId());
             throw new StockInsuficienteException(
@@ -135,9 +151,9 @@ public class Venta implements IEntidad<Integer> {
             );
         }
         
-        // Verificar si el producto ya está en la venta para actualizar cantidad
+        // Verificamos si el producto ya está en la venta para actualizar cantidad
         for (DetalleVenta detalle : detalles) {
-            if (detalle.getProducto().getId() == producto.getId()) {
+            if (Objects.equals(detalle.getProducto().getId(), producto.getId())) {
                 detalle.setCantidad(cantidadTotalNecesaria);
                 actualizarTotales();
                 return true;
@@ -151,7 +167,12 @@ public class Venta implements IEntidad<Integer> {
         actualizarTotales();
         return true;
     }
-    
+
+    /**
+     *  Remover un producto de la venta
+     * @param productoId id del producto a remover
+     * @return true si el producto se pudo remover, false si no
+     */
     public boolean removerProducto(int productoId) {
         for (Iterator<DetalleVenta> iterator = detalles.iterator(); iterator.hasNext();) {
             DetalleVenta detalle = iterator.next();
@@ -163,59 +184,40 @@ public class Venta implements IEntidad<Integer> {
         }
         return false;
     }
-    
-    public boolean actualizarCantidad(int productoId, int nuevaCantidad, Stock stock) throws StockInsuficienteException {
-        if (nuevaCantidad <= 0) {
-            return removerProducto(productoId);
-        }
-        
-        for (DetalleVenta detalle : detalles) {
-            if (detalle.getProducto().getId() == productoId) {
-                // Verificar stock disponible antes de actualizar
-                if (!stock.hayStock(productoId, nuevaCantidad)) {
-                    int stockDisponible = stock.obtenerCantidad(productoId);
-                    throw new StockInsuficienteException(
-                        "No hay suficiente stock del producto: " + detalle.getProducto().getNombre() + 
-                        ". Disponible: " + stockDisponible + ", Requerido: " + nuevaCantidad,
-                        stockDisponible,
-                        nuevaCantidad
-                    );
-                }
-                detalle.setCantidad(nuevaCantidad);
-                actualizarTotales();
-                return true;
-            }
-        }
-        return false;
-    }
-    
+
+
+    /**
+     *  Procesa la venta de un producto, realizando verificaciones, mostrando al usuario la info de la venta,
+     *  aplicando descuentos, verificando el saldo del cliente, removiendo los productos del stock una vez vendidos,
+     *  restandole el total de la venta al cliente y actualizando las estadisticas del cliente y vendedor
+     * @param stock stock del producto a vender
+     * @throws StockInsuficienteException si no hay stock suficiente
+     * @throws SaldoInsuficienteException si el cliente no tiene saldo suficiente
+     * @throws ProductoNoEncontradoException si no se encuentra el producto a vender
+     * @return true si la venta fue procesada con éxito
+     */
     public boolean procesarVenta(Stock stock) throws StockInsuficienteException, SaldoInsuficienteException, ProductoNoEncontradoException {
         if (detalles.isEmpty()) {
             throw new IllegalArgumentException("No hay productos en la venta.");
         }
         
-        // Verificar stock de todos los productos
+        // Verificamos el stock de todos los productos
         for (DetalleVenta detalle : detalles) {
             if (!stock.hayStock(detalle.getProducto().getId(), detalle.getCantidad())) {
                 int stockDisponible = stock.obtenerCantidad(detalle.getProducto().getId());
-                throw new StockInsuficienteException(
-                    "No hay suficiente stock del producto: " + detalle.getProducto().getNombre() + 
-                    ". Disponible: " + stockDisponible + ", Requerido: " + detalle.getCantidad(),
-                    stockDisponible,
-                    detalle.getCantidad()
-                );
+                throw new StockInsuficienteException("No hay suficiente stock del producto: " + detalle.getProducto().getNombre() + ". Disponible: " + stockDisponible + ", Requerido: " + detalle.getCantidad(), stockDisponible, detalle.getCantidad());
             }
         }
         
-        // Aplicar descuento por método de pago
+        // Aplicamos el descuento por método de pago
         double descuentoAplicado = DescuentoMetodoPago.calcularDescuento(subtotal, metodoPago);
         double totalConDescuento = DescuentoMetodoPago.calcularMontoFinal(subtotal, metodoPago);
         
-        // Actualizar total con descuento
+        // Actualizamos el monto total con descuento
         this.descuento = descuentoAplicado;
         this.total = totalConDescuento;
         
-        // Mostrar resumen de la venta
+        // Mostramos elñ resumen de la venta
         System.out.println("\n🧾 RESUMEN DE VENTA");
         System.out.println("═══════════════════════════════════");
         System.out.println("💰 Subtotal: $" + String.format("%.2f", subtotal));
@@ -226,25 +228,20 @@ public class Venta implements IEntidad<Integer> {
         System.out.println("💳 Método de pago: " + metodoPago);
         System.out.println("═══════════════════════════════════");
         
-        // Verificar saldo del cliente
+        // Verificamos el saldo del cliente
         if (cliente.getSaldo() < totalConDescuento) {
-            throw new SaldoInsuficienteException(
-                "Saldo insuficiente del cliente. Saldo actual: $" + String.format("%.2f", cliente.getSaldo()) + 
-                ", Total de la venta: $" + String.format("%.2f", totalConDescuento),
-                cliente.getSaldo(),
-                totalConDescuento
-            );
+            throw new SaldoInsuficienteException("Saldo insuficiente del cliente. Saldo actual: $" + String.format("%.2f", cliente.getSaldo()) + ", Total de la venta: $" + String.format("%.2f", totalConDescuento),cliente.getSaldo(), totalConDescuento);
         }
         
-        // Remover productos del stock
+        // Removemos los productos del stock
         for (DetalleVenta detalle : detalles) {
             stock.eliminarProducto(detalle.getProducto().getId(), detalle.getCantidad());
         }
         
-        // Descontar dinero del cliente
+        // Descontamos el dinero de la venta al cliente
         cliente.setSaldo(cliente.getSaldo() - total);
         
-        // Actualizar estadísticas del cliente y vendedor
+        // Actualizamos las estadísticas del cliente y del vendedor
         String descripcionCompra = "Venta #" + id + " - " + detalles.size() + " productos - Total: $" + String.format("%.2f", total);
         if (descuentoAplicado > 0) {
             descripcionCompra += " (Descuento: $" + String.format("%.2f", descuentoAplicado) + ")";
@@ -258,7 +255,10 @@ public class Venta implements IEntidad<Integer> {
         this.estado = "COMPLETADA";
         return true;
     }
-    
+
+    /**
+     *  Actualiza el monto total de la venta
+     */
     private void actualizarTotales() {
         subtotal = 0.0;
         for (DetalleVenta detalle : detalles) {
@@ -284,8 +284,8 @@ public class Venta implements IEntidad<Integer> {
             System.out.println("🛍️ PRODUCTOS:");
             for (DetalleVenta detalle : detalles) {
                 System.out.println(String.format("  📱 %s x%d = $%.2f",
-                    detalle.getProducto().getNombre(), 
-                    detalle.getCantidad(), 
+                    detalle.getProducto().getNombre(),
+                    detalle.getCantidad(),
                     detalle.getSubtotal()));
             }
             
@@ -302,7 +302,6 @@ public class Venta implements IEntidad<Integer> {
     // ---------------------- MÉTODOS SOBREESCRITOS ----------------------
     @Override
     public String toString() {
-        return String.format("🧾 Venta #%d | Cliente: %s | Total: $%.2f | Estado: %s",
-                           id, cliente.getNombre(), total, estado);
+        return String.format("🧾 Venta #%d | Cliente: %s | Total: $%.2f | Estado: %s",id, cliente.getNombre(), total, estado);
     }
 }

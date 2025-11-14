@@ -6,6 +6,13 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * ELECCION DE COLECCIONES:
+ *
+ * - ArrayList para historial de ventas: Usamos ArrayList para mantener las ventas en orden
+ *   cronológico, donde vamos agregando cada venta una tras otra y luego podemos verlas todas
+ *   en secuencia.
+ */
 public class Vendedor extends Usuario {
     private int cantVentas = 0;
     private double salario;
@@ -113,18 +120,20 @@ public class Vendedor extends Usuario {
     }
     
     // ---------------------- METODOS ----------------------
+
+    /**
+     * Realiza la venta de un producto, aumenta la cantidad total de ventas del vendedor y agrega la comisión de la venta al salario
+     * @param descripcionVenta Descripción de la venta
+     * @param montoVenta Monto del producto
+     */
     public void realizarVenta(String descripcionVenta, double montoVenta) {
-        String venta = LocalDateTime.now().toString() + " - " + descripcionVenta + " - Monto: $" + String.format("%.2f", montoVenta);
+        String venta = LocalDateTime.now() + " - " + descripcionVenta + " - Monto: $" + String.format("%.2f", montoVenta);
         historialVentas.add(venta);
         cantVentas++;
         
         // Calcular comisión y agregarla automáticamente al salario
         double comision = montoVenta * (comisionPorVenta / 100.0);
         salario += comision;
-    }
-    
-    public double calcularSalarioTotal() {
-        return salario;
     }
 
     // ---------------------- MÉTODOS SOBREESCRITOS ----------------------

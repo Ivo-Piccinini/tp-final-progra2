@@ -22,6 +22,8 @@ public class DescuentoMetodoPago {
     
     /**
      * Obtiene el porcentaje de descuento para un método de pago
+     * @param metodoPago metodo de pago del cual queremos conocer el descuento
+     * @return descuento del metodo de pago especificado
      */
     public static double obtenerDescuento(MetodoPago metodoPago) {
         return DESCUENTOS_POR_METODO.getOrDefault(metodoPago, 0.0);
@@ -29,6 +31,9 @@ public class DescuentoMetodoPago {
     
     /**
      * Calcula el descuento en pesos para un monto dado
+     * @param monto
+     * @param metodoPago
+     * @return descuento para el monto y el metodo de pago especificados
      */
     public static double calcularDescuento(double monto, MetodoPago metodoPago) {
         double porcentaje = obtenerDescuento(metodoPago);
@@ -37,6 +42,9 @@ public class DescuentoMetodoPago {
     
     /**
      * Calcula el monto final después del descuento
+     * @param monto
+     * @param metodoPago
+     * @return monto final luego de ser aplicado el descuento
      */
     public static double calcularMontoFinal(double monto, MetodoPago metodoPago) {
         double descuento = calcularDescuento(monto, metodoPago);
@@ -58,11 +66,11 @@ public class DescuentoMetodoPago {
             String descripcion = obtenerDescripcionMetodo(metodo);
             
             if (descuento > 0) {
-                System.out.println(String.format("%s %s: %.1f%% de descuento", 
-                    emoji, descripcion, descuento));
+                System.out.printf("%s %s: %.1f%% de descuento%n",
+                    emoji, descripcion, descuento);
             } else {
-                System.out.println(String.format("%s %s: Sin descuento", 
-                    emoji, descripcion));
+                System.out.printf("%s %s: Sin descuento%n",
+                    emoji, descripcion);
             }
         }
         System.out.println("═══════════════════════════════════");
@@ -70,6 +78,8 @@ public class DescuentoMetodoPago {
     
     /**
      * Obtiene el emoji correspondiente al método de pago
+     * @param metodo metodo de pago cuyo emogi queremos obtener
+     * @return el emoji correspondiente al método de pago
      */
     private static String obtenerEmojiMetodo(MetodoPago metodo) {
         switch (metodo) {
@@ -84,6 +94,8 @@ public class DescuentoMetodoPago {
     
     /**
      * Obtiene la descripción del método de pago
+     * @param metodo metodo de pago cuya descripcion queremos obtener
+     * @return descripcion del metodo de pago especificado
      */
     private static String obtenerDescripcionMetodo(MetodoPago metodo) {
         switch (metodo) {
